@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import BenefitCard from '../components/BenefitCard'
 import CourseCard from '../components/CourseCard'
+import DetailModal from '../components/DetailModal'
 import { getAreaBasedList } from '../api/tourApi'
 import { MOCK_COURSES } from './Course'
 
@@ -12,10 +13,11 @@ function SkeletonCard() {
 export default function Home() {
   const [benefits, setBenefits] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
     getAreaBasedList({ contentTypeId: '15', numOfRows: 4 })
-      .then(body => setBenefits(Array.isArray(body.items?.item) ? body.items.item : []))
+      .then(items => setBenefits(items))
       .catch(() => setBenefits([]))
       .finally(() => setLoading(false))
   }, [])
@@ -40,7 +42,13 @@ export default function Home() {
           </div>
         ) : benefits.length > 0 ? (
           <div className="grid grid-cols-2 gap-3">
-            {benefits.map((b, i) => <BenefitCard key={b.contentid ?? i} benefit={b} />)}
+            {benefits.map((b, i) => (
+              <BenefitCard
+                key={b.contentid ?? i}
+                benefit={b}
+                onClick={() => setSelectedId(b.contentid)}
+              />
+            ))}
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-dashed border-gray-200 py-10 text-center">
@@ -63,6 +71,10 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {selectedId && (
+        <DetailModal contentId={selectedId} onClose={() => setSelectedId(null)} />
+      )}
     </div>
   )
 }

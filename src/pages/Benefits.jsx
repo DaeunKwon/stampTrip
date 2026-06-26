@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import BenefitCard from '../components/BenefitCard'
-import { getAreaBasedList, getEventList } from '../api/tourApi'
+import DetailModal from '../components/DetailModal'
+import { getAreaBasedList, getFestivalList } from '../api/tourApi'
 
 const AREA_CODES = [
   { code: '',   label: '전국' },
@@ -31,16 +32,17 @@ export default function Benefits() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('benefit')
   const [areaCode, setAreaCode] = useState('')
+  const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
     setLoading(true)
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     const req = tab === 'event'
-      ? getEventList({ areaCode, eventStartDate: today, numOfRows: 20 })
+      ? getFestivalList({ areaCode, eventStartDate: today })
       : getAreaBasedList({ areaCode, contentTypeId: '15', numOfRows: 20 })
 
     req
-      .then(body => setItems(Array.isArray(body.items?.item) ? body.items.item : []))
+      .then(items => setItems(items))
       .catch(() => setItems([]))
       .finally(() => setLoading(false))
   }, [tab, areaCode])
@@ -92,7 +94,11 @@ export default function Benefits() {
         ) : items.length > 0 ? (
           <div className="grid grid-cols-2 gap-3">
             {items.map((item, i) => (
-              <BenefitCard key={item.contentid ?? i} benefit={item} />
+              <BenefitCard
+                key={item.contentid ?? i}
+                benefit={item}
+                onClick={() => setSelectedId(item.contentid)}
+              />
             ))}
           </div>
         ) : (
@@ -103,6 +109,10 @@ export default function Benefits() {
           </div>
         )}
       </div>
+
+      {selectedId && (
+        <DetailModal contentId={selectedId} onClose={() => setSelectedId(null)} />
+      )}
     </div>
   )
 }

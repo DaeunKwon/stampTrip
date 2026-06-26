@@ -20,11 +20,10 @@ export default function Detail() {
   const stamped = isStamped(id)
 
   useEffect(() => {
-    Promise.all([getDetailCommon({ contentId: id }), getDetailImage({ contentId: id })])
-      .then(([common, imgBody]) => {
-        setDetail(common.items?.item?.[0] ?? null)
-        const imgItems = imgBody.items?.item
-        setImages(Array.isArray(imgItems) ? imgItems : imgItems ? [imgItems] : [])
+    Promise.all([getDetailCommon(id), getDetailImage(id)])
+      .then(([common, imgs]) => {
+        setDetail(common ?? null)
+        setImages(imgs)
       })
       .catch(() => {})
       .finally(() => setLoading(false))

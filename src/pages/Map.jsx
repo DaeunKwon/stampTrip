@@ -39,9 +39,8 @@ export default function Map() {
       mapX: position.lng,
       mapY: position.lat,
       radius: 2000,
-      numOfRows: 30,
     })
-      .then(body => setSpots(Array.isArray(body.items?.item) ? body.items.item : []))
+      .then(items => setSpots(items))
       .catch(() => {})
   }, [position?.lat, position?.lng])
 

@@ -1,71 +1,87 @@
-const BASE_URL = 'https://apis.data.go.kr/B551011/KorService1'
+const BASE_URL = 'https://apis.data.go.kr/B551011/KorService2';
+const API_KEY = import.meta.env.VITE_TOUR_API_KEY;
 
-function buildQuery(params) {
-  const base = {
+function buildParams(extra = {}) {
+  const params = {
+    serviceKey: API_KEY,
     MobileOS: 'ETC',
-    MobileApp: '도장여행',
+    MobileApp: 'StampTrip',
     _type: 'json',
-    serviceKey: import.meta.env.VITE_TOUR_API_KEY,
+    ...extra,
+  };
+  return new URLSearchParams(
+    Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== '')),
+  ).toString();
+}
+
+function extractItems(data) {
+  const item = data?.response?.body?.items?.item;
+  if (!item) return [];
+  return Array.isArray(item) ? item : [item];
+}
+
+async function fetchApi(endpoint, params) {
+  const url = `${BASE_URL}${endpoint}?${buildParams(params)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`TourAPI 요청 실패: ${res.status}`);
+  const data = await res.json();
+  const header = data?.response?.header;
+  if (header?.resultCode !== '0000') {
+    throw new Error(`TourAPI 오류: ${header?.resultMsg}`);
   }
-  // undefined 값 제거
-  const merged = Object.fromEntries(
-    Object.entries({ ...base, ...params }).filter(([, v]) => v !== undefined && v !== ''),
-  )
-  return new URLSearchParams(merged).toString()
+  return extractItems(data);
 }
 
-async function apiFetch(endpoint, params) {
-  const res = await fetch(`${BASE_URL}/${endpoint}?${buildQuery(params)}`)
-  if (!res.ok) throw new Error(`TourAPI 오류: ${res.status}`)
-  const json = await res.json()
-  return json.response.body
+export function getAreaBasedList({ areaCode, contentTypeId, pageNo = 1, numOfRows = 20 } = {}) {
+  return fetchApi('/areaBasedList2', { areaCode, contentTypeId, pageNo, numOfRows });
 }
 
-/** 지역기반 관광정보 조회 */
-export function getAreaBasedList({ areaCode, sigunguCode, contentTypeId, pageNo = 1, numOfRows = 20 } = {}) {
-  return apiFetch('areaBasedList1', { areaCode, sigunguCode, contentTypeId, pageNo, numOfRows })
+export function getLocationBasedList({ mapX, mapY, radius = 500 } = {}) {
+  return fetchApi('/locationBasedList2', { mapX, mapY, radius });
 }
 
-/** 위치기반 관광정보 조회 */
-export function getLocationBasedList({ mapX, mapY, radius = 2000, contentTypeId, pageNo = 1, numOfRows = 20 } = {}) {
-  return apiFetch('locationBasedList1', { mapX, mapY, radius, contentTypeId, pageNo, numOfRows })
+export function getFestivalList({ eventStartDate, areaCode } = {}) {
+  return fetchApi('/searchFestival2', { eventStartDate, areaCode });
 }
 
-/** 행사/축제 정보 조회 */
-export function getEventList({ areaCode, eventStartDate, eventEndDate, pageNo = 1, numOfRows = 20 } = {}) {
-  return apiFetch('searchFestival1', { areaCode, eventStartDate, eventEndDate, pageNo, numOfRows })
+export async function getDetailCommon(contentId) {
+  const items = await fetchApi('/detailCommon2', { contentId });
+  return items[0] ?? null;
 }
 
-/** 키워드 검색 */
-export function searchKeyword({ keyword, areaCode, contentTypeId, pageNo = 1, numOfRows = 20 } = {}) {
-  return apiFetch('searchKeyword1', { keyword, areaCode, contentTypeId, pageNo, numOfRows })
-}
-
-/** 공통 상세 정보 (이름, 주소, 이미지, 개요 등) */
-export function getDetailCommon({ contentId } = {}) {
-  return apiFetch('detailCommon1', {
+export function getDetailImage(contentId) {
+  return fetchApi('/detailImage2', {
     contentId,
-    defaultYN: 'Y',
-    firstImageYN: 'Y',
-    areacodeYN: 'Y',
-    catcodeYN: 'Y',
-    addrinfoYN: 'Y',
-    mapinfoYN: 'Y',
-    overviewYN: 'Y',
-  })
+    imageYN: 'Y',
+    subImageYN: 'Y',
+  });
 }
 
-/** 소개 정보 (운영시간, 요금 등) */
-export function getDetailIntro({ contentId, contentTypeId } = {}) {
-  return apiFetch('detailIntro1', { contentId, contentTypeId })
+const LCLSSYSTM_CACHE_KEY = 'lclsSystmCache';
+
+function readCache() {
+  try { return JSON.parse(localStorage.getItem(LCLSSYSTM_CACHE_KEY) || '{}'); } catch { return {}; }
 }
 
-/** 반복 정보 (시설 목록 등) */
-export function getDetailInfo({ contentId, contentTypeId } = {}) {
-  return apiFetch('detailInfo1', { contentId, contentTypeId })
+function writeCache(cache) {
+  try { localStorage.setItem(LCLSSYSTM_CACHE_KEY, JSON.stringify(cache)); } catch { }
 }
 
-/** 이미지 정보 */
-export function getDetailImage({ contentId, imageYN = 'Y', subImageYN = 'Y' } = {}) {
-  return apiFetch('detailImage1', { contentId, imageYN, subImageYN })
+export async function getLclsSystmName({ lclsSystm1, lclsSystm2, lclsSystm3 } = {}) {
+  const key = `${lclsSystm1 ?? ''}-${lclsSystm2 ?? ''}-${lclsSystm3 ?? ''}`;
+  const cache = readCache();
+  if (key in cache) return cache[key];
+
+  const url = `https://apis.data.go.kr/B551011/KorService2/lclsSystmCode2?${buildParams({ lclsSystm1, lclsSystm2, lclsSystm3 })}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`lclsSystmCode2 요청 실패: ${res.status}`);
+  const data = await res.json();
+
+  const raw = data?.response?.body?.items?.item;
+  const item = Array.isArray(raw) ? raw[raw.length - 1] : raw;
+  const name = item?.name ?? '';
+
+  cache[key] = name;
+  writeCache(cache);
+  return name;
 }
