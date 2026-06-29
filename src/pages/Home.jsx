@@ -16,7 +16,7 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
-    getAreaBasedList({ contentTypeId: '15', numOfRows: 4 })
+    getAreaBasedList({ contentTypeId: '15', numOfRows: 4, arrange: 'C' })
       .then(items => setBenefits(items))
       .catch(() => setBenefits([]))
       .finally(() => setLoading(false))

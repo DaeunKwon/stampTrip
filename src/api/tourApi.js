@@ -32,16 +32,16 @@ async function fetchApi(endpoint, params) {
   return extractItems(data);
 }
 
-export function getAreaBasedList({ areaCode, contentTypeId, pageNo = 1, numOfRows = 20 } = {}) {
-  return fetchApi('/areaBasedList2', { areaCode, contentTypeId, pageNo, numOfRows });
+export function getAreaBasedList({ areaCode, contentTypeId, pageNo = 1, numOfRows = 20, arrange } = {}) {
+  return fetchApi('/areaBasedList2', { areaCode, contentTypeId, pageNo, numOfRows, arrange });
 }
 
 export function getLocationBasedList({ mapX, mapY, radius = 500 } = {}) {
   return fetchApi('/locationBasedList2', { mapX, mapY, radius });
 }
 
-export function getFestivalList({ eventStartDate, areaCode } = {}) {
-  return fetchApi('/searchFestival2', { eventStartDate, areaCode });
+export function getFestivalList({ eventStartDate, areaCode, arrange } = {}) {
+  return fetchApi('/searchFestival2', { eventStartDate, areaCode, arrange });
 }
 
 export async function getDetailCommon(contentId) {

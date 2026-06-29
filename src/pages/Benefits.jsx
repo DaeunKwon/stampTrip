@@ -38,8 +38,8 @@ export default function Benefits() {
     setLoading(true)
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     const req = tab === 'event'
-      ? getFestivalList({ areaCode, eventStartDate: today })
-      : getAreaBasedList({ areaCode, contentTypeId: '15', numOfRows: 20 })
+      ? getFestivalList({ areaCode, eventStartDate: today, arrange: 'C' })
+      : getAreaBasedList({ areaCode, contentTypeId: '15', numOfRows: 20, arrange: 'C' })
 
     req
       .then(items => setItems(items))
