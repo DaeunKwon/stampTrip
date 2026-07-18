@@ -116,6 +116,30 @@ npm run preview  # 빌드 결과 미리보기
 
 ---
 
+## 배포 & 테스터에게 공유하기 (Vercel)
+
+`git clone` 없이 링크만으로 테스트를 요청하려면 Vercel 배포를 추천합니다. GPS 기능은 브라우저가 HTTPS 접속에서만 허용하는데, Vercel은 기본으로 HTTPS를 제공합니다.
+
+1. [vercel.com](https://vercel.com)에서 GitHub 계정으로 로그인 → **Add New → Project** → 이 저장소 선택 (Framework는 Vite로 자동 감지됨)
+2. **Environment Variables**에 아래 값을 등록 (Production/Preview 모두 체크):
+   | 이름 | 값 |
+   |---|---|
+   | `VITE_TOUR_API_KEY` | 발급받은 투어API 키 |
+   | `VITE_KAKAO_MAP_KEY` | 발급받은 카카오 JavaScript 키 |
+   | `BASIC_AUTH_USER` | 테스터에게 알려줄 아이디 |
+   | `BASIC_AUTH_PASS` | 테스터에게 알려줄 비밀번호 |
+3. **Deploy** 클릭 → 완료되면 `https://프로젝트명.vercel.app` 형태의 URL 생성
+4. 배포된 도메인을 **카카오 개발자 콘솔 → 앱 설정 → 플랫폼 → Web**에 추가 등록 (`localhost`와는 별개로, 배포 도메인도 반드시 등록해야 지도가 뜸)
+5. 테스터에게 배포 URL + 3번에서 정한 아이디/비밀번호 전달 → 접속 시 브라우저 기본 로그인 창이 뜨고, 맞는 아이디/비밀번호를 입력해야 화면이 보임
+
+### 접근 제한 방식 (Basic Auth)
+
+이 저장소의 [`middleware.js`](middleware.js)가 Vercel Edge Middleware로 동작하며, `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` 환경변수가 설정된 경우에만 모든 요청에 HTTP Basic 인증을 요구합니다. 두 변수를 비워두면(로컬 개발 등) 인증 없이 통과합니다.
+
+> ⚠️ `VITE_` 접두사가 붙은 키(TourAPI, 카카오맵)는 클라이언트 번들에 그대로 포함되어 로그인한 사람이라면 브라우저 개발자 도구에서 볼 수 있습니다. Basic Auth는 "아무나 사이트에 들어오는 것"만 막을 뿐, 로그인한 테스터에게 API 키 자체를 숨기지는 못합니다 — 신뢰할 수 있는 소수의 테스터에게만 공유하세요.
+
+---
+
 ## API 키 발급 방법
 
 ### 한국관광공사 TourAPI
