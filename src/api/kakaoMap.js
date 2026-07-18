@@ -68,6 +68,28 @@ export function createMarker(maps, lat, lng, options = {}) {
   return new maps.Marker({ position, ...options })
 }
 
+function svgToDataUri(svg) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
+const SPOT_PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="34" viewBox="0 0 26 34"><path d="M13 0C5.8 0 0 5.8 0 13c0 9.4 13 21 13 21s13-11.6 13-21C26 5.8 20.2 0 13 0z" fill="#f97316"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>`
+
+const LOCATION_DOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><circle cx="12" cy="12" r="10" fill="#2563eb" fill-opacity="0.18"/><circle cx="12" cy="12" r="7" fill="#2563eb" stroke="#fff" stroke-width="2.5"/></svg>`
+
+/** 관광지 마커용 오렌지 핀 이미지를 생성합니다. */
+export function createSpotMarkerImage(maps) {
+  return new maps.MarkerImage(svgToDataUri(SPOT_PIN_SVG), new maps.Size(26, 34), {
+    offset: new maps.Point(13, 34),
+  })
+}
+
+/** 내 위치 마커용 파란 점 이미지를 생성합니다. */
+export function createLocationMarkerImage(maps) {
+  return new maps.MarkerImage(svgToDataUri(LOCATION_DOT_SVG), new maps.Size(24, 24), {
+    offset: new maps.Point(12, 12),
+  })
+}
+
 /** InfoWindow를 생성하고 반환합니다. */
 export function createInfoWindow(maps, content) {
   return new maps.InfoWindow({ content })

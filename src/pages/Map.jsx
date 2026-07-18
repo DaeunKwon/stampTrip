@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import useGPS from '../hooks/useGPS'
 import useStamp from '../hooks/useStamp'
-import { loadKakaoMap, calcDistance } from '../api/kakaoMap'
+import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarkerImage } from '../api/kakaoMap'
 import { getLocationBasedList } from '../api/tourApi'
 
-const STAMP_RADIUS = 200 // meters
+export const STAMP_RADIUS = 100 // meters
 
 export default function Map() {
   const mapContainerRef = useRef(null)
@@ -12,7 +12,7 @@ export default function Map() {
   const markersRef = useRef([])
 
   const [spots, setSpots] = useState([])
-  const [nearbySpot, setNearbySpot] = useState(null)
+  const [selectedSpot, setSelectedSpot] = useState(null)
   const [mapReady, setMapReady] = useState(false)
   const [mapError, setMapError] = useState(null)
 
@@ -57,40 +57,54 @@ export default function Map() {
     const center = new maps.LatLng(position.lat, position.lng)
     map.setCenter(center)
 
-    // 내 위치
+    // 내 위치 (파란 점, 관광지 마커와 구분)
     const myMarker = new maps.Marker({
       map,
       position: center,
       title: '내 위치',
+      image: createLocationMarkerImage(maps),
       zIndex: 10,
     })
     markersRef.current.push(myMarker)
 
-    // 관광지 마커
+    // 관광지 마커 — 반경 내: 진하게 / 밖: 옅게. 활성 여부와 무관하게 클릭하면 정보를 볼 수 있다.
+    const spotImage = createSpotMarkerImage(maps)
     spots.forEach(spot => {
+      const dist = calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx))
+      const active = dist <= STAMP_RADIUS
+
       const pos = new maps.LatLng(Number(spot.mapy), Number(spot.mapx))
-      const marker = new maps.Marker({ map, position: pos, title: spot.title })
-      maps.event.addListener(marker, 'click', () => setNearbySpot(spot))
+      const marker = new maps.Marker({
+        map,
+        position: pos,
+        title: spot.title,
+        image: spotImage,
+        opacity: active ? 1 : 0.4,
+      })
+      maps.event.addListener(marker, 'click', () => setSelectedSpot(spot))
       markersRef.current.push(marker)
     })
-
-    // 반경 내 관광지 자동 감지
-    const inRange = spots.find(spot => {
-      const dist = calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx))
-      return dist <= STAMP_RADIUS
-    })
-    setNearbySpot(inRange ?? null)
   }, [mapReady, position, spots])
 
+  // 선택된 관광지가 없으면 반경 내 관광지를 자동으로 보여준다 (걸어서 진입했을 때)
+  const autoSpot = !selectedSpot && position
+    ? spots.find(spot => calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx)) <= STAMP_RADIUS) ?? null
+    : null
+  const displaySpot = selectedSpot ?? autoSpot
+  const displaySpotDistance = displaySpot && position
+    ? calcDistance(position.lat, position.lng, Number(displaySpot.mapy), Number(displaySpot.mapx))
+    : null
+  const isDisplaySpotActive = displaySpotDistance !== null && displaySpotDistance <= STAMP_RADIUS
+
   const handleStamp = useCallback(() => {
-    if (!nearbySpot) return
+    if (!displaySpot || !isDisplaySpotActive) return
     stamp({
-      contentId: nearbySpot.contentid,
-      title: nearbySpot.title,
-      addr1: nearbySpot.addr1,
-      firstimage: nearbySpot.firstimage ?? '',
+      contentId: displaySpot.contentid,
+      title: displaySpot.title,
+      addr1: displaySpot.addr1,
+      firstimage: displaySpot.firstimage ?? '',
     })
-  }, [nearbySpot, stamp])
+  }, [displaySpot, isDisplaySpotActive, stamp])
 
   return (
     <div className="relative h-[calc(100vh-4rem)]">
@@ -129,21 +143,36 @@ export default function Map() {
 
       {/* 스탬프 패널 */}
       <div className="absolute bottom-3 left-3 right-3 z-10">
-        {nearbySpot ? (
+        {displaySpot ? (
           <div className="bg-white rounded-2xl shadow-xl px-4 py-4">
-            <p className="text-xs text-primary-500 font-medium mb-0.5">📍 근처 관광지 발견!</p>
-            <p className="font-bold text-gray-800 text-base mb-3">{nearbySpot.title}</p>
-            {isStamped(nearbySpot.contentid) ? (
-              <div className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl text-sm text-center border border-gray-100">
-                ✓ 이미 인증된 장소입니다
-              </div>
+            {isDisplaySpotActive ? (
+              <>
+                <p className="text-xs text-primary-500 font-medium mb-0.5">📍 근처 관광지 발견!</p>
+                <p className="font-bold text-gray-800 text-base mb-3">{displaySpot.title}</p>
+                {isStamped(displaySpot.contentid) ? (
+                  <div className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl text-sm text-center border border-gray-100">
+                    ✓ 이미 인증된 장소입니다
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleStamp}
+                    className="w-full py-3.5 bg-primary-500 text-white rounded-xl text-sm font-bold shadow-md shadow-primary-200 active:scale-95 transition-transform"
+                  >
+                    🗺️ 스탬프 찍기
+                  </button>
+                )}
+              </>
             ) : (
-              <button
-                onClick={handleStamp}
-                className="w-full py-3.5 bg-primary-500 text-white rounded-xl text-sm font-bold shadow-md shadow-primary-200 active:scale-95 transition-transform"
-              >
-                🗺️ 스탬프 찍기
-              </button>
+              <>
+                <p className="text-xs text-gray-400 font-medium mb-0.5">📍 선택한 관광지</p>
+                <p className="font-bold text-gray-800 text-base mb-1">{displaySpot.title}</p>
+                <p className="text-xs text-gray-400 mb-3">
+                  현재 위치에서 {Math.round(displaySpotDistance)}m · 반경 {STAMP_RADIUS}m 밖
+                </p>
+                <div className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl text-sm text-center border border-gray-100">
+                  🔒 가까이 가면 인증할 수 있어요
+                </div>
+              </>
             )}
           </div>
         ) : position && (

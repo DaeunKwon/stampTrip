@@ -1,5 +1,6 @@
 import useStamp from '../hooks/useStamp'
 import StampBadge from '../components/StampBadge'
+import { STAMP_RADIUS } from './Map'
 
 export default function Archive() {
   const { stamps, unstamp, clear } = useStamp()
@@ -37,7 +38,7 @@ export default function Archive() {
           <p className="text-6xl mb-5">🗺️</p>
           <p className="text-gray-600 font-medium">여행을 시작해보세요!</p>
           <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-            지도 탭에서 관광지 반경 200m 내에<br />들어가면 스탬프를 찍을 수 있습니다
+            지도 탭에서 관광지 반경 {STAMP_RADIUS}m 내에<br />들어가면 스탬프를 찍을 수 있습니다
           </p>
         </div>
       ) : (
