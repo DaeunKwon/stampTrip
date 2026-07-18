@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import BenefitCard from '../components/BenefitCard'
 import DetailModal from '../components/DetailModal'
+import Pagination from '../components/Pagination'
 import { getAreaBasedList, getFestivalList } from '../api/tourApi'
+
+const ITEMS_PER_PAGE = 6
 
 const AREA_CODES = [
   { code: '',   label: '전국' },
@@ -33,19 +36,27 @@ export default function Benefits() {
   const [tab, setTab] = useState('benefit')
   const [areaCode, setAreaCode] = useState('')
   const [selectedId, setSelectedId] = useState(null)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     setLoading(true)
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     const req = tab === 'event'
-      ? getFestivalList({ areaCode, eventStartDate: today, arrange: 'C' })
-      : getAreaBasedList({ areaCode, contentTypeId: '15', numOfRows: 20, arrange: 'C' })
+      ? getFestivalList({ areaCode, eventStartDate: today, numOfRows: 60, arrange: 'C' })
+      : getAreaBasedList({ areaCode, contentTypeId: '15', numOfRows: 60, arrange: 'C' })
 
     req
       .then(items => setItems(items))
       .catch(() => setItems([]))
       .finally(() => setLoading(false))
   }, [tab, areaCode])
+
+  useEffect(() => {
+    setPage(1)
+  }, [tab, areaCode])
+
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE)
+  const pagedItems = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
   return (
     <div className="pt-6">
@@ -92,15 +103,18 @@ export default function Benefits() {
             {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : items.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3">
-            {items.map((item, i) => (
-              <BenefitCard
-                key={item.contentid ?? i}
-                benefit={item}
-                onClick={() => setSelectedId(item.contentid)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {pagedItems.map((item, i) => (
+                <BenefitCard
+                  key={item.contentid ?? i}
+                  benefit={item}
+                  onClick={() => setSelectedId(item.contentid)}
+                />
+              ))}
+            </div>
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+          </>
         ) : (
           <div className="text-center py-20">
             <p className="text-5xl mb-3">🎁</p>

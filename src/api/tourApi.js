@@ -40,8 +40,8 @@ export function getLocationBasedList({ mapX, mapY, radius = 500 } = {}) {
   return fetchApi('/locationBasedList2', { mapX, mapY, radius });
 }
 
-export function getFestivalList({ eventStartDate, areaCode, arrange } = {}) {
-  return fetchApi('/searchFestival2', { eventStartDate, areaCode, arrange });
+export function getFestivalList({ eventStartDate, areaCode, pageNo = 1, numOfRows = 20, arrange } = {}) {
+  return fetchApi('/searchFestival2', { eventStartDate, areaCode, pageNo, numOfRows, arrange });
 }
 
 export async function getDetailCommon(contentId) {
