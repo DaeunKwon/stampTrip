@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getDetailCommon } from '../api/tourApi'
+import { getDetailCommon, getDetailIntro } from '../api/tourApi'
 
 // HTML 태그/엔티티 정리 (<br> → 줄바꿈, 나머지 태그 제거, 엔티티 디코드)
 function cleanHtml(str = '') {
@@ -10,31 +10,52 @@ function cleanHtml(str = '') {
   return txt.value.trim()
 }
 
+// YYYYMMDD → YYYY.MM.DD
+function formatDate(str = '') {
+  if (str.length !== 8) return str
+  return `${str.slice(0, 4)}.${str.slice(4, 6)}.${str.slice(6, 8)}`
+}
+
 export default function DetailModal({ contentId, onClose }) {
   const [detail, setDetail] = useState(null)
+  const [intro, setIntro] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  // 상세 정보 로딩
+  // 상세 정보 + 행사 정보 로딩 (detailCommon2 → detailIntro2 순서로 모두 끝나야 loading 해제)
   useEffect(() => {
     if (!contentId) return
     let alive = true
     setLoading(true)
     setError(false)
+    setDetail(null)
+    setIntro(null)
     getDetailCommon(contentId)
       .then(data => {
         if (!alive) return
-        if (!data) setError(true)
-        else setDetail(data)
+        if (!data) {
+          setError(true)
+          return
+        }
+        setDetail(data)
+        return getDetailIntro(data.contentid, data.contenttypeid)
+          .then(introData => alive && setIntro(introData))
+          .catch(() => {})
       })
       .catch(() => alive && setError(true))
       .finally(() => alive && setLoading(false))
     return () => { alive = false }
   }, [contentId])
 
+  // 닫기 (로딩 중에는 화면 조작 불가 처리로 무시)
+  function handleClose() {
+    if (loading) return
+    onClose()
+  }
+
   // ESC 닫기 + 배경 스크롤 방지
   useEffect(() => {
-    const onKey = e => e.key === 'Escape' && onClose()
+    const onKey = e => e.key === 'Escape' && !loading && onClose()
     document.addEventListener('keydown', onKey)
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -42,16 +63,27 @@ export default function DetailModal({ contentId, onClose }) {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
     }
-  }, [onClose])
+  }, [onClose, loading])
 
   const homepage = detail?.homepage ? cleanHtml(detail.homepage) : ''
   const overview = detail?.overview ? cleanHtml(detail.overview) : ''
   const fullAddr = [detail?.addr1, detail?.addr2].filter(Boolean).join(' ')
 
+  const eventPeriod = intro?.eventstartdate
+    ? `${formatDate(intro.eventstartdate)}${intro.eventenddate ? ` ~ ${formatDate(intro.eventenddate)}` : ''}`
+    : ''
+  const eventPlace = intro?.eventplace ? cleanHtml(intro.eventplace) : ''
+  const playtime = intro?.playtime ? cleanHtml(intro.playtime) : ''
+  const program = intro?.program ? cleanHtml(intro.program) : ''
+  const useTimeFestival = intro?.usetimefestival ? cleanHtml(intro.usetimefestival) : ''
+  const discountInfo = intro?.discountinfofestival ? cleanHtml(intro.discountinfofestival) : ''
+  const spendTime = intro?.spendtimefestival ? cleanHtml(intro.spendtimefestival) : ''
+  const hasEventInfo = eventPeriod || eventPlace || playtime || program
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      onClick={onClose}
+      onClick={handleClose}
     >
       {/* 오버레이 */}
       <div className="absolute inset-0 bg-black/50" />
@@ -61,21 +93,22 @@ export default function DetailModal({ contentId, onClose }) {
         className="relative w-full max-w-md max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-[slideUp_0.25s_ease-out]"
         onClick={e => e.stopPropagation()}
       >
-        {/* 닫기 버튼 */}
+        {/* 닫기 버튼 (로딩 중 비활성화) */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
+          disabled={loading}
           aria-label="닫기"
-          className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 text-white text-lg backdrop-blur"
+          className={`absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 text-white text-lg backdrop-blur transition-opacity ${
+            loading ? 'opacity-40 cursor-not-allowed' : ''
+          }`}
         >
           ✕
         </button>
 
         {loading ? (
-          <div className="p-6 space-y-4 animate-pulse">
-            <div className="w-full h-48 bg-gray-100 rounded-2xl" />
-            <div className="h-6 bg-gray-100 rounded-lg w-2/3" />
-            <div className="h-4 bg-gray-100 rounded-lg w-1/2" />
-            <div className="h-24 bg-gray-100 rounded-xl mt-2" />
+          <div className="min-h-[380px] flex flex-col items-center justify-center gap-3">
+            <div className="w-8 h-8 rounded-full border-[3px] border-primary-100 border-t-primary-500 animate-spin" />
+            <p className="text-sm text-gray-500 font-medium">불러오는 중...</p>
           </div>
         ) : error ? (
           <div className="py-24 text-center px-6">
@@ -136,6 +169,56 @@ export default function DetailModal({ contentId, onClose }) {
                   <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                     {overview}
                   </p>
+                </div>
+              )}
+
+              {/* 행사 정보 */}
+              {hasEventInfo && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <h3 className="font-bold text-gray-800 mb-2">행사 정보</h3>
+                  <div className="bg-primary-50 border border-primary-100 rounded-2xl p-3.5 space-y-2.5">
+                    {eventPeriod && (
+                      <span className="inline-flex items-center gap-1 bg-primary-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        📅 {eventPeriod}
+                      </span>
+                    )}
+                    {eventPlace && (
+                      <div className="flex gap-2 items-start">
+                        <span className="text-sm">📌</span>
+                        <p className="text-sm text-gray-700 whitespace-pre-line">{eventPlace}</p>
+                      </div>
+                    )}
+                    {playtime && (
+                      <div className="flex gap-2 items-start">
+                        <span className="text-sm">⏰</span>
+                        <p className="text-sm text-gray-700 whitespace-pre-line">{playtime}</p>
+                      </div>
+                    )}
+                    {program && (
+                      <div className="flex gap-2 items-start">
+                        <span className="text-sm">🎫</span>
+                        <p className="text-sm text-gray-700 whitespace-pre-line">{program}</p>
+                      </div>
+                    )}
+                    {useTimeFestival && (
+                      <div className="flex gap-2 items-start">
+                        <span className="text-sm">💳</span>
+                        <p className="text-sm text-gray-700 whitespace-pre-line">{useTimeFestival}</p>
+                      </div>
+                    )}
+                    {spendTime && (
+                      <div className="flex gap-2 items-start">
+                        <span className="text-sm">⏱️</span>
+                        <p className="text-sm text-gray-700 whitespace-pre-line">{spendTime}</p>
+                      </div>
+                    )}
+                    {discountInfo && (
+                      <div className="flex gap-2 items-start">
+                        <span className="text-sm">🏷️</span>
+                        <p className="text-sm text-primary-600 font-medium whitespace-pre-line">{discountInfo}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

@@ -49,6 +49,11 @@ export async function getDetailCommon(contentId) {
   return items[0] ?? null;
 }
 
+export async function getDetailIntro(contentId, contentTypeId) {
+  const items = await fetchApi('/detailIntro2', { contentId, contentTypeId });
+  return items[0] ?? null;
+}
+
 export function getDetailImage(contentId) {
   return fetchApi('/detailImage2', {
     contentId,

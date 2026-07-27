@@ -4,7 +4,7 @@ import useStamp from '../hooks/useStamp'
 import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarkerImage } from '../api/kakaoMap'
 import { getLocationBasedList } from '../api/tourApi'
 
-export const STAMP_RADIUS = 100 // meters
+export const STAMP_RADIUS = 200 // meters (테스트용 임시 확대)
 
 export default function Map() {
   const mapContainerRef = useRef(null)
