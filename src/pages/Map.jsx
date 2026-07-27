@@ -5,6 +5,7 @@ import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarker
 import { getLocationBasedList } from '../api/tourApi'
 
 export const STAMP_RADIUS = 200 // meters (테스트용 임시 확대)
+const RECENTER_THRESHOLD = 50 // meters — 지도 중심이 내 위치에서 이만큼 벗어나면 "내 위치로 이동" 버튼 표시
 
 export default function Map() {
   const mapContainerRef = useRef(null)
@@ -15,6 +16,9 @@ export default function Map() {
   const [selectedSpot, setSelectedSpot] = useState(null)
   const [mapReady, setMapReady] = useState(false)
   const [mapError, setMapError] = useState(null)
+  const [mapCenter, setMapCenter] = useState(null)
+
+  const hasCenteredRef = useRef(false)
 
   const { position, loading: gpsLoading, error: gpsError } = useGPS()
   const { stamps, stamp, isStamped } = useStamp()
@@ -32,21 +36,42 @@ export default function Map() {
       .catch(err => setMapError(err.message))
   }, [])
 
-  // GPS 위치 기반 주변 관광지 조회
+  // 최초 GPS 위치를 받으면 지도 중심을 한 번만 옮긴다 (이후엔 사용자가 옮긴 지도 위치를 유지)
   useEffect(() => {
-    if (!position) return
-    getLocationBasedList({
-      mapX: position.lng,
-      mapY: position.lat,
-      radius: 2000,
-    })
-      .then(items => setSpots(items))
-      .catch(() => {})
-  }, [position?.lat, position?.lng])
+    if (!mapReady || !position || hasCenteredRef.current || !mapRef.current) return
+    const maps = window.kakao.maps
+    mapRef.current.setCenter(new maps.LatLng(position.lat, position.lng))
+    hasCenteredRef.current = true
+  }, [mapReady, position])
+
+  // 지도 화면 범위(뷰포트)가 바뀔 때마다(드래그/줌 후 idle) 그 범위의 관광지를 재조회
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    const maps = window.kakao.maps
+    const map = mapRef.current
+
+    function fetchByViewport() {
+      const bounds = map.getBounds()
+      const center = map.getCenter()
+      const ne = bounds.getNorthEast()
+      const radius = Math.min(
+        Math.round(calcDistance(center.getLat(), center.getLng(), ne.getLat(), ne.getLng())),
+        20000,
+      )
+      setMapCenter({ lat: center.getLat(), lng: center.getLng() })
+      getLocationBasedList({ mapX: center.getLng(), mapY: center.getLat(), radius })
+        .then(items => setSpots(items))
+        .catch(() => {})
+    }
+
+    const listener = maps.event.addListener(map, 'idle', fetchByViewport)
+    fetchByViewport()
+    return () => maps.event.removeListener(listener)
+  }, [mapReady])
 
   // 지도 마커 갱신
   useEffect(() => {
-    if (!mapReady || !position || !mapRef.current) return
+    if (!mapReady || !mapRef.current) return
     const maps = window.kakao.maps
 
     // 기존 마커 제거
@@ -54,24 +79,26 @@ export default function Map() {
     markersRef.current = []
 
     const map = mapRef.current
-    const center = new maps.LatLng(position.lat, position.lng)
-    map.setCenter(center)
 
     // 내 위치 (파란 점, 관광지 마커와 구분)
-    const myMarker = new maps.Marker({
-      map,
-      position: center,
-      title: '내 위치',
-      image: createLocationMarkerImage(maps),
-      zIndex: 10,
-    })
-    markersRef.current.push(myMarker)
+    if (position) {
+      const myMarker = new maps.Marker({
+        map,
+        position: new maps.LatLng(position.lat, position.lng),
+        title: '내 위치',
+        image: createLocationMarkerImage(maps),
+        zIndex: 10,
+      })
+      markersRef.current.push(myMarker)
+    }
 
-    // 관광지 마커 — 반경 내: 진하게 / 밖: 옅게. 활성 여부와 무관하게 클릭하면 정보를 볼 수 있다.
+    // 관광지 마커 — 화면 범위 내 관광지는 모두 표시하고, 내 위치 반경 내: 진하게 / 밖: 옅게.
+    // 활성 여부와 무관하게 클릭하면 정보를 볼 수 있다.
     const spotImage = createSpotMarkerImage(maps)
     spots.forEach(spot => {
-      const dist = calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx))
-      const active = dist <= STAMP_RADIUS
+      const active = position
+        ? calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx)) <= STAMP_RADIUS
+        : false
 
       const pos = new maps.LatLng(Number(spot.mapy), Number(spot.mapx))
       const marker = new maps.Marker({
@@ -105,6 +132,17 @@ export default function Map() {
       firstimage: displaySpot.firstimage ?? '',
     })
   }, [displaySpot, isDisplaySpotActive, stamp])
+
+  // 지도 중심이 내 위치에서 일정 거리 이상 벗어났는지
+  const showRecenter = position && mapCenter
+    ? calcDistance(mapCenter.lat, mapCenter.lng, position.lat, position.lng) > RECENTER_THRESHOLD
+    : false
+
+  const handleRecenter = useCallback(() => {
+    if (!position || !mapRef.current) return
+    const maps = window.kakao.maps
+    mapRef.current.panTo(new maps.LatLng(position.lat, position.lng))
+  }, [position])
 
   return (
     <div className="relative h-[calc(100vh-4rem)]">
@@ -140,6 +178,24 @@ export default function Map() {
           <p className="text-xs text-gray-400 mt-0.5">반경 {STAMP_RADIUS}m 내 관광지 인증 가능</p>
         )}
       </div>
+
+      {/* 내 위치로 이동 버튼 (지도 중심이 내 위치에서 벗어났을 때만 표시) */}
+      {showRecenter && (
+        <button
+          onClick={handleRecenter}
+          aria-label="내 위치로 이동"
+          className="absolute top-24 right-3 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-lg active:scale-95 transition-transform"
+        >
+          <svg viewBox="0 0 24 24" className="w-5 h-5">
+            <circle cx="12" cy="12" r="7" fill="none" stroke="#f97316" strokeWidth="2" />
+            <circle cx="12" cy="12" r="2.6" fill="#f97316" />
+            <line x1="12" y1="0.5" x2="12" y2="4" stroke="#f97316" strokeWidth="2" />
+            <line x1="12" y1="20" x2="12" y2="23.5" stroke="#f97316" strokeWidth="2" />
+            <line x1="0.5" y1="12" x2="4" y2="12" stroke="#f97316" strokeWidth="2" />
+            <line x1="20" y1="12" x2="23.5" y2="12" stroke="#f97316" strokeWidth="2" />
+          </svg>
+        </button>
+      )}
 
       {/* 스탬프 패널 */}
       <div className="absolute bottom-3 left-3 right-3 z-10">

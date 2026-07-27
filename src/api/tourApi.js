@@ -36,8 +36,8 @@ export function getAreaBasedList({ areaCode, contentTypeId, pageNo = 1, numOfRow
   return fetchApi('/areaBasedList2', { areaCode, contentTypeId, pageNo, numOfRows, arrange });
 }
 
-export function getLocationBasedList({ mapX, mapY, radius = 500 } = {}) {
-  return fetchApi('/locationBasedList2', { mapX, mapY, radius });
+export function getLocationBasedList({ mapX, mapY, radius = 500, numOfRows = 100 } = {}) {
+  return fetchApi('/locationBasedList2', { mapX, mapY, radius, numOfRows });
 }
 
 export function getFestivalList({ eventStartDate, areaCode, pageNo = 1, numOfRows = 20, arrange } = {}) {
