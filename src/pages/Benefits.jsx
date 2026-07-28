@@ -46,7 +46,16 @@ export default function Benefits() {
       : getAreaBasedList({ areaCode, contentTypeId: '15', numOfRows: 60, arrange: 'C' })
 
     req
-      .then(items => setItems(items))
+      .then(items => {
+        // 행사/축제 탭은 종료 예정일(eventenddate)이 임박한 순, 종료일이 같으면 시작일이 빠른 순으로 정렬
+        const sorted = tab === 'event'
+          ? [...items].sort((a, b) =>
+              (a.eventenddate ?? '').localeCompare(b.eventenddate ?? '') ||
+              (a.eventstartdate ?? '').localeCompare(b.eventstartdate ?? '')
+            )
+          : items
+        setItems(sorted)
+      })
       .catch(() => setItems([]))
       .finally(() => setLoading(false))
   }, [tab, areaCode])
