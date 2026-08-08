@@ -64,9 +64,9 @@ export default function Map() {
         .catch(() => {})
     }
 
-    const listener = maps.event.addListener(map, 'idle', fetchByViewport)
+    maps.event.addListener(map, 'idle', fetchByViewport)
     fetchByViewport()
-    return () => maps.event.removeListener(listener)
+    return () => maps.event.removeListener(map, 'idle', fetchByViewport)
   }, [mapReady])
 
   // 지도 마커 갱신

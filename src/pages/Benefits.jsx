@@ -16,8 +16,8 @@ const AREA_CODES = [
   { code: '6',  label: '부산' },
   { code: '32', label: '강원' },
   { code: '31', label: '경기' },
-  { code: '37', label: '전남' },
-  { code: '38', label: '경북' },
+  { code: '37', label: '전북' },
+  { code: '38', label: '전남' },
   { code: '39', label: '제주' },
 ]
 
@@ -41,19 +41,25 @@ export default function Benefits() {
   useEffect(() => {
     setLoading(true)
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    // searchFestival2는 응답의 areacode 필드가 항상 빈 값이라 서버 areaCode 필터가 0건만 반환한다.
+    // 전국 데이터를 받아 addr1 접두어로 지역을 직접 걸러낸다.
     const req = tab === 'event'
-      ? getFestivalList({ areaCode, eventStartDate: today, numOfRows: 60, arrange: 'C' })
+      ? getFestivalList({ eventStartDate: today, numOfRows: 200, arrange: 'C' })
       : getAreaBasedList({ areaCode, contentTypeId: '15', numOfRows: 60, arrange: 'C' })
 
     req
       .then(items => {
+        const areaLabel = AREA_CODES.find(a => a.code === areaCode)?.label
+        const filtered = tab === 'event' && areaCode
+          ? items.filter(item => item.addr1?.startsWith(areaLabel))
+          : items
         // 행사/축제 탭은 종료 예정일(eventenddate)이 임박한 순, 종료일이 같으면 시작일이 빠른 순으로 정렬
         const sorted = tab === 'event'
-          ? [...items].sort((a, b) =>
+          ? [...filtered].sort((a, b) =>
               (a.eventenddate ?? '').localeCompare(b.eventenddate ?? '') ||
               (a.eventstartdate ?? '').localeCompare(b.eventstartdate ?? '')
             )
-          : items
+          : filtered
         setItems(sorted)
       })
       .catch(() => setItems([]))
