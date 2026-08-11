@@ -16,7 +16,7 @@ export default function Archive() {
       {/* 헤더 */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">나의 여행 아카이브</h1>
+          <h1 className="text-xl font-bold text-gray-900">마이 페이지</h1>
           <p className="text-xs text-gray-500 mt-0.5">
             {stamps.length > 0
               ? `스탬프 ${stamps.length}개 수집`

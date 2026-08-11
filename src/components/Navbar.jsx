@@ -4,7 +4,7 @@ const TABS = [
   { to: '/',        icon: '🏠', label: '홈'     },
   { to: '/course',  icon: '🗺️', label: '코스'   },
   { to: '/map',     icon: '📍', label: '지도'   },
-  { to: '/archive', icon: '📚', label: '아카이브' },
+  { to: '/archive', icon: '📚', label: '마이' },
 ]
 
 export default function Navbar() {

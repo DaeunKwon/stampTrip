@@ -26,7 +26,7 @@ export default function Home() {
     <div className="px-4 pt-6 pb-4">
       {/* 헤더 */}
       <header className="mb-7">
-        <h1 className="text-2xl font-bold text-gray-900">도장여행 🗺️</h1>
+        <h1 className="text-2xl font-bold text-gray-900">스탬프여행 🗺️</h1>
         <p className="text-sm text-gray-500 mt-1">여행 코스 추천 · 행사 정보 · 방문 스탬프</p>
       </header>
 
