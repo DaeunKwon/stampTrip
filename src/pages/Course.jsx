@@ -1,151 +1,120 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import CourseCard from '../components/CourseCard'
-import SpotCard from '../components/SpotCard'
-import useStamp from '../hooks/useStamp'
+import { useState, useEffect } from 'react'
+import BenefitCard from '../components/BenefitCard'
+import DetailModal from '../components/DetailModal'
+import Pagination from '../components/Pagination'
+import { getFestivalList } from '../api/tourApi'
 
-export const MOCK_COURSES = [
-  {
-    id: 1,
-    title: '서울 역사 한바퀴',
-    duration: '1일',
-    distance: '약 5km',
-    spots: [
-      { contentid: '126508', title: '경복궁',       addr1: '서울 종로구 사직로 161', firstimage: '' },
-      { contentid: '264337', title: '북촌한옥마을', addr1: '서울 종로구 계동길 37',   firstimage: '' },
-      { contentid: '264545', title: '창덕궁',       addr1: '서울 종로구 율곡로 99',   firstimage: '' },
-    ],
-  },
-  {
-    id: 2,
-    title: '부산 해안 드라이브',
-    duration: '2일',
-    distance: '약 12km',
-    spots: [
-      { contentid: '125452', title: '해운대해수욕장', addr1: '부산 해운대구 우동',   firstimage: '' },
-      { contentid: '126425', title: '광안리해수욕장', addr1: '부산 수영구 광안해변로', firstimage: '' },
-      { contentid: '126473', title: '태종대',         addr1: '부산 영도구 전망로 24', firstimage: '' },
-    ],
-  },
-  {
-    id: 3,
-    title: '제주 자연 탐방',
-    duration: '3일',
-    distance: '약 20km',
-    spots: [
-      { contentid: '127405', title: '한라산',       addr1: '제주 서귀포시 토평동 산15-1', firstimage: '' },
-      { contentid: '127427', title: '성산일출봉', addr1: '제주 서귀포시 성산읍',        firstimage: '' },
-      { contentid: '264270', title: '만장굴',       addr1: '제주 제주시 구좌읍 만장굴길', firstimage: '' },
-    ],
-  },
-  {
-    id: 4,
-    title: '경주 천년 문화 투어',
-    duration: '1일',
-    distance: '약 8km',
-    spots: [
-      { contentid: '126280', title: '불국사',     addr1: '경북 경주시 불국로 385',     firstimage: '' },
-      { contentid: '126098', title: '석굴암',     addr1: '경북 경주시 불국로 873-243', firstimage: '' },
-      { contentid: '127493', title: '첨성대',     addr1: '경북 경주시 인왕동 839-1',   firstimage: '' },
-    ],
-  },
+const ITEMS_PER_PAGE = 6
+
+const AREA_CODES = [
+  { code: '',   label: '전국' },
+  { code: '1',  label: '서울' },
+  { code: '2',  label: '인천' },
+  { code: '3',  label: '대전' },
+  { code: '4',  label: '대구' },
+  { code: '5',  label: '광주' },
+  { code: '6',  label: '부산' },
+  { code: '32', label: '강원' },
+  { code: '31', label: '경기' },
+  { code: '37', label: '전북' },
+  { code: '38', label: '전남' },
+  { code: '39', label: '제주' },
 ]
 
-const FILTERS = [
-  { key: 'all',  label: '전체' },
-  { key: '1',    label: '1일' },
-  { key: '2',    label: '2일' },
-  { key: '3',    label: '3일' },
-]
+function SkeletonCard() {
+  return <div className="bg-gray-100 rounded-2xl h-52 animate-pulse" />
+}
 
 export default function Course() {
-  const [selected, setSelected] = useState(null)
-  const [filter, setFilter] = useState('all')
-  const { isStamped } = useStamp()
-  const navigate = useNavigate()
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [areaCode, setAreaCode] = useState('')
+  const [selectedId, setSelectedId] = useState(null)
+  const [page, setPage] = useState(1)
 
-  const filtered = filter === 'all'
-    ? MOCK_COURSES
-    : MOCK_COURSES.filter(c => c.duration.startsWith(filter))
+  useEffect(() => {
+    setLoading(true)
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    // searchFestival2는 응답의 areacode 필드가 항상 빈 값이라 서버 areaCode 필터가 0건만 반환한다.
+    // 전국 데이터를 받아 addr1 접두어로 지역을 직접 걸러낸다.
+    getFestivalList({ eventStartDate: today, numOfRows: 200, arrange: 'C' })
+      .then(items => {
+        const areaLabel = AREA_CODES.find(a => a.code === areaCode)?.label
+        const filtered = areaCode
+          ? items.filter(item => item.addr1?.startsWith(areaLabel))
+          : items
+        // 종료 예정일(eventenddate)이 임박한 순, 종료일이 같으면 시작일이 빠른 순으로 정렬
+        const sorted = [...filtered].sort((a, b) =>
+          (a.eventenddate ?? '').localeCompare(b.eventenddate ?? '') ||
+          (a.eventstartdate ?? '').localeCompare(b.eventstartdate ?? '')
+        )
+        setItems(sorted)
+      })
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false))
+  }, [areaCode])
 
-  if (selected) {
-    const total = selected.spots.length
-    const done = selected.spots.filter(s => isStamped(s.contentid)).length
+  useEffect(() => {
+    setPage(1)
+  }, [areaCode])
 
-    return (
-      <div className="pt-6">
-        {/* 코스 상세 헤더 */}
-        <div className="flex items-center gap-3 px-4 mb-1">
-          <button onClick={() => setSelected(null)} className="text-gray-400 text-xl p-1">←</button>
-          <h1 className="text-lg font-bold text-gray-900 flex-1 line-clamp-1">{selected.title}</h1>
-        </div>
-        <div className="flex gap-3 px-4 mb-5 text-sm text-gray-500">
-          <span>⏱ {selected.duration}</span>
-          <span>·</span>
-          <span>🚶 {selected.distance}</span>
-          <span>·</span>
-          <span className="text-primary-500 font-medium">{done}/{total} 인증</span>
-        </div>
-
-        {/* 코스 타임라인 */}
-        <div className="px-4 flex flex-col gap-0">
-          {selected.spots.map((spot, i) => (
-            <div key={spot.contentid} className="flex gap-3 items-stretch">
-              <div className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 border-2 ${
-                  isStamped(spot.contentid)
-                    ? 'bg-primary-500 text-white border-primary-500'
-                    : 'bg-white text-gray-400 border-gray-200'
-                }`}>
-                  {isStamped(spot.contentid) ? '✓' : i + 1}
-                </div>
-                {i < selected.spots.length - 1 && (
-                  <div className="w-0.5 flex-1 bg-gray-200 my-1 min-h-4" />
-                )}
-              </div>
-              <div className="flex-1 pb-3">
-                <SpotCard spot={spot} showStamp stamped={isStamped(spot.contentid)} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {done === total && (
-          <div className="mx-4 mt-4 p-4 bg-primary-50 rounded-2xl text-center">
-            <p className="text-2xl mb-1">🎉</p>
-            <p className="font-bold text-primary-600">코스 완주! 모든 스탬프를 모았습니다</p>
-          </div>
-        )}
-      </div>
-    )
-  }
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE)
+  const pagedItems = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
   return (
     <div className="pt-6">
       <div className="px-4 mb-4">
-        <h1 className="text-xl font-bold text-gray-900">명소 코스 추천</h1>
-        <p className="text-xs text-gray-500 mt-0.5">동선 최적화 1~3일 테마 코스</p>
+        <h1 className="text-xl font-bold text-gray-900">행사·축제 정보</h1>
+        <p className="text-xs text-gray-500 mt-0.5">전국 행사 · 축제 · 공연 정보</p>
       </div>
 
-      <div className="flex gap-2 px-4 mb-5">
-        {FILTERS.map(f => (
+      {/* 지역 필터 */}
+      <div className="flex gap-2 px-4 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+        {AREA_CODES.map(area => (
           <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filter === f.key ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600'
+            key={area.code}
+            onClick={() => setAreaCode(area.code)}
+            className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-medium border transition-colors flex-shrink-0 ${
+              areaCode === area.code
+                ? 'bg-primary-500 text-white border-primary-500'
+                : 'bg-white text-gray-600 border-gray-200'
             }`}
           >
-            {f.label}
+            {area.label}
           </button>
         ))}
       </div>
 
-      <div className="px-4 flex flex-col gap-3">
-        {filtered.map(course => (
-          <CourseCard key={course.id} course={course} onClick={() => setSelected(course)} />
-        ))}
+      <div className="px-4">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : items.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {pagedItems.map((item, i) => (
+                <BenefitCard
+                  key={item.contentid ?? i}
+                  benefit={item}
+                  onClick={() => setSelectedId(item.contentid)}
+                />
+              ))}
+            </div>
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+          </>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-5xl mb-3">🎪</p>
+            <p className="text-gray-500 font-medium">정보가 없습니다</p>
+            <p className="text-xs text-gray-400 mt-1">다른 지역을 선택해보세요</p>
+          </div>
+        )}
       </div>
+
+      {selectedId && (
+        <DetailModal contentId={selectedId} onClose={() => setSelectedId(null)} />
+      )}
     </div>
   )
 }

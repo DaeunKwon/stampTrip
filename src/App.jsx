@@ -1,7 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
-import Benefits from './pages/Benefits'
 import Course from './pages/Course'
 import Map from './pages/Map'
 import Archive from './pages/Archive'
@@ -13,7 +12,6 @@ export default function App() {
       <main className="pb-20 min-h-screen overflow-y-auto">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/benefits" element={<Benefits />} />
           <Route path="/course" element={<Course />} />
           <Route path="/map" element={<Map />} />
           <Route path="/archive" element={<Archive />} />
