@@ -130,7 +130,7 @@ export default function DetailModal({ contentId, onClose }) {
               </div>
             )}
 
-            <div className="px-5 pt-4 pb-6">
+            <div className="px-5 pt-4 pb-2">
               {/* 제목 */}
               <h2 className="text-xl font-bold text-gray-900 leading-snug mb-3">
                 {detail.title}
@@ -221,6 +221,16 @@ export default function DetailModal({ contentId, onClose }) {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* 주변 코스 스팟 보기 — 스크롤과 무관하게 팝업 하단 고정, 클릭 동작은 추후 구현 */}
+            <div className="sticky bottom-0 px-4 pb-4 pt-5 bg-gradient-to-t from-white via-white to-white/0">
+              <button
+                type="button"
+                className="w-full py-3 rounded-full bg-primary-500 text-white text-[15px] font-bold shadow-lg shadow-primary-500/30 active:scale-[0.97] transition-transform"
+              >
+                📍 주변 코스 스팟 보기
+              </button>
             </div>
           </>
         ) : null}
