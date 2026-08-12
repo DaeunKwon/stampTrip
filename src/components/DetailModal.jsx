@@ -90,7 +90,7 @@ export default function DetailModal({ contentId, onClose }) {
 
       {/* 모달 본체 */}
       <div
-        className="relative w-full max-w-md max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-[slideUp_0.25s_ease-out]"
+        className="relative w-full max-w-md max-h-[70vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-[slideUp_0.25s_ease-out]"
         onClick={e => e.stopPropagation()}
       >
         {/* 닫기 버튼 (로딩 중 비활성화) */}
