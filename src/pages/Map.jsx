@@ -60,7 +60,8 @@ export default function Map() {
       )
       setMapCenter({ lat: center.getLat(), lng: center.getLng() })
       getLocationBasedList({ mapX: center.getLng(), mapY: center.getLat(), radius })
-        .then(items => setSpots(items))
+        // 음식(lclsSystm1 'FD') 분류는 지도에 노출하지 않는다
+        .then(items => setSpots(items.filter(item => item.lclsSystm1 !== 'FD')))
         .catch(() => {})
     }
 
