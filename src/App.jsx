@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import { ToastProvider } from './components/Toast'
+import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Course from './pages/Course'
 import NearbySpots from './pages/NearbySpots'
@@ -11,6 +12,7 @@ import Detail from './pages/Detail'
 export default function App() {
   return (
     <ToastProvider>
+    <ScrollToTop />
     <div className="max-w-md mx-auto min-h-screen bg-gray-50 relative overflow-hidden">
       <main className="pb-20 min-h-screen overflow-y-auto">
         <Routes>
