@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
 import useGPS from '../hooks/useGPS'
 import useStamp from '../hooks/useStamp'
-import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarkerImage } from '../api/kakaoMap'
+import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarkerImage, createFocusMarkerImage } from '../api/kakaoMap'
 import { getLocationBasedList } from '../api/tourApi'
 
 export const STAMP_RADIUS = 200 // meters (테스트용 임시 확대)
@@ -12,11 +13,16 @@ export default function Map() {
   const mapRef = useRef(null)
   const markersRef = useRef([])
 
+  // 주변 코스 스팟 리스트에서 명소를 클릭해 들어온 경우 그 좌표를 중심으로 지도를 연다
+  const focusSpot = useLocation().state?.focusSpot ?? null
+
   const [spots, setSpots] = useState([])
-  const [selectedSpot, setSelectedSpot] = useState(null)
+  // 명소를 선택해 들어온 경우 진입 즉시 그 명소를 선택 상태로 두어 하단 정보 카드를 띄운다
+  const [selectedSpot, setSelectedSpot] = useState(focusSpot)
   const [mapReady, setMapReady] = useState(false)
   const [mapError, setMapError] = useState(null)
   const [mapCenter, setMapCenter] = useState(null)
+  const [showFocusChip, setShowFocusChip] = useState(Boolean(focusSpot))
 
   const hasCenteredRef = useRef(false)
 
@@ -29,11 +35,25 @@ export default function Map() {
       .then(maps => {
         const el = mapContainerRef.current
         if (!el) return
-        const center = new maps.LatLng(37.5665, 126.9780)
+        const center = focusSpot
+          ? new maps.LatLng(Number(focusSpot.mapy), Number(focusSpot.mapx))
+          : new maps.LatLng(37.5665, 126.9780)
         mapRef.current = new maps.Map(el, { center, level: 5 })
+        // 명소 좌표로 열린 경우 GPS 수신 후에도 내 위치로 재센터링하지 않는다
+        if (focusSpot) hasCenteredRef.current = true
         setMapReady(true)
       })
       .catch(err => setMapError(err.message))
+    // focusSpot은 마운트 시점의 라우터 상태로 고정된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 「○○ 위치로 이동했습니다」 안내 칩은 2.5초 후 사라진다
+  useEffect(() => {
+    if (!focusSpot) return
+    const timer = setTimeout(() => setShowFocusChip(false), 2500)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // 최초 GPS 위치를 받으면 지도 중심을 한 번만 옮긴다 (이후엔 사용자가 옮긴 지도 위치를 유지)
@@ -95,8 +115,11 @@ export default function Map() {
 
     // 관광지 마커 — 화면 범위 내 관광지는 모두 표시하고, 내 위치 반경 내: 진하게 / 밖: 옅게.
     // 활성 여부와 무관하게 클릭하면 정보를 볼 수 있다.
+    // 주변 코스 스팟에서 선택해 들어온 명소는 큰 전용 마커 + 이름 라벨로 강조한다.
     const spotImage = createSpotMarkerImage(maps)
+    const focusImage = focusSpot ? createFocusMarkerImage(maps) : null
     spots.forEach(spot => {
+      const isFocus = focusSpot?.contentid === spot.contentid
       const active = position
         ? calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx)) <= STAMP_RADIUS
         : false
@@ -106,13 +129,26 @@ export default function Map() {
         map,
         position: pos,
         title: spot.title,
-        image: spotImage,
-        opacity: active ? 1 : 0.4,
+        image: isFocus ? focusImage : spotImage,
+        opacity: isFocus || active ? 1 : 0.4,
+        zIndex: isFocus ? 5 : 0,
       })
       maps.event.addListener(marker, 'click', () => setSelectedSpot(spot))
       markersRef.current.push(marker)
+
+      if (isFocus) {
+        const safeTitle = String(spot.title).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        const label = new maps.CustomOverlay({
+          map,
+          position: pos,
+          yAnchor: 1,
+          zIndex: 5,
+          content: `<div style="transform:translateY(-56px);background:#fff;border:1px solid #f3f4f6;border-radius:9999px;padding:5px 11px;font-size:12px;font-weight:700;color:#1f2937;box-shadow:0 2px 6px rgba(0,0,0,.15);white-space:nowrap;">${safeTitle}</div>`,
+        })
+        markersRef.current.push(label)
+      }
     })
-  }, [mapReady, position, spots])
+  }, [mapReady, position, spots, focusSpot])
 
   // 선택된 관광지가 없으면 반경 내 관광지를 자동으로 보여준다 (걸어서 진입했을 때)
   const autoSpot = !selectedSpot && position
@@ -179,6 +215,17 @@ export default function Map() {
           <p className="text-xs text-gray-400 mt-0.5">반경 {STAMP_RADIUS}m 내 관광지 인증 가능</p>
         )}
       </div>
+
+      {/* 주변 코스 스팟에서 넘어온 경우 이동 안내 칩 (2.5초 후 페이드아웃) */}
+      {focusSpot && (
+        <div
+          className={`absolute top-20 left-1/2 -translate-x-1/2 z-10 bg-white/95 backdrop-blur rounded-full shadow-lg px-4 py-2 text-xs text-gray-600 whitespace-nowrap pointer-events-none transition-opacity duration-500 ${
+            showFocusChip ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          📍 <span className="font-bold text-primary-600">{focusSpot.title}</span> 위치로 이동했습니다
+        </div>
+      )}
 
       {/* 내 위치로 이동 버튼 (지도 중심이 내 위치에서 벗어났을 때만 표시) */}
       {showRecenter && (

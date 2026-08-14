@@ -25,6 +25,23 @@ export default function NearbySpots() {
     if (!mapx || !mapy) navigate('/course', { replace: true })
   }, [mapx, mapy, navigate])
 
+  // 명소 클릭 → 지도 탭으로 이동, 지도는 해당 명소 좌표를 중심으로 열린다
+  // (지도에서 강조 마커 + 하단 정보 카드에 쓰이도록 관광지 정보를 함께 넘긴다)
+  function goMap(spot) {
+    navigate('/map', {
+      state: {
+        focusSpot: {
+          contentid: spot.contentid,
+          title: spot.title,
+          mapx: spot.mapx,
+          mapy: spot.mapy,
+          addr1: spot.addr1,
+          firstimage: spot.firstimage ?? '',
+        },
+      },
+    })
+  }
+
   useEffect(() => {
     if (!mapx || !mapy) return
     setLoading(true)
@@ -56,6 +73,8 @@ export default function NearbySpots() {
         📍 <span className="font-bold text-primary-600">{title}</span>에서{' '}
         <span className="font-bold text-primary-600">반경 1km 이내</span>의 관광 명소입니다.
         함께 둘러보며 코스를 완성해 보세요.
+        <br />
+        🗺️ 명소를 클릭하면 지도 탭에서 위치를 확인할 수 있어요.
       </div>
 
       <div className="px-4">
@@ -68,7 +87,11 @@ export default function NearbySpots() {
             {spots.map((spot, i) => (
               <div
                 key={spot.contentid ?? i}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3"
+                role="button"
+                tabIndex={0}
+                onClick={() => goMap(spot)}
+                onKeyDown={e => e.key === 'Enter' && goMap(spot)}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
               >
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-gray-800 mb-0.5">{spot.title}</h3>

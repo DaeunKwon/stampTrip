@@ -76,6 +76,8 @@ const SPOT_PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height=
 
 const LOCATION_DOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><circle cx="12" cy="12" r="10" fill="#2563eb" fill-opacity="0.18"/><circle cx="12" cy="12" r="7" fill="#2563eb" stroke="#fff" stroke-width="2.5"/></svg>`
 
+const FOCUS_PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="50" viewBox="0 0 38 50"><path d="M19 1.5C10.5 1.5 3.5 8.4 3.5 16.9c0 11.3 15.5 31.6 15.5 31.6s15.5-20.3 15.5-31.6C34.5 8.4 27.5 1.5 19 1.5z" fill="#ea580c" stroke="#fff" stroke-width="3"/><circle cx="19" cy="17" r="7" fill="#fff"/></svg>`
+
 /** 관광지 마커용 오렌지 핀 이미지를 생성합니다. */
 export function createSpotMarkerImage(maps) {
   return new maps.MarkerImage(svgToDataUri(SPOT_PIN_SVG), new maps.Size(26, 34), {
@@ -87,6 +89,13 @@ export function createSpotMarkerImage(maps) {
 export function createLocationMarkerImage(maps) {
   return new maps.MarkerImage(svgToDataUri(LOCATION_DOT_SVG), new maps.Size(24, 24), {
     offset: new maps.Point(12, 12),
+  })
+}
+
+/** 주변 코스 스팟에서 선택해 들어온 명소를 강조하는 큰 핀 이미지를 생성합니다. */
+export function createFocusMarkerImage(maps) {
+  return new maps.MarkerImage(svgToDataUri(FOCUS_PIN_SVG), new maps.Size(38, 50), {
+    offset: new maps.Point(19, 50),
   })
 }
 
