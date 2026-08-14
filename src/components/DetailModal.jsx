@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDetailCommon, getDetailIntro } from '../api/tourApi'
+import useFavorite from '../hooks/useFavorite'
+import { useToast } from './Toast'
 
 // HTML 태그/엔티티 정리 (<br> → 줄바꿈, 나머지 태그 제거, 엔티티 디코드)
 function cleanHtml(str = '') {
@@ -19,6 +21,8 @@ function formatDate(str = '') {
 
 export default function DetailModal({ contentId, onClose }) {
   const navigate = useNavigate()
+  const { toggleFavorite, isFavorite } = useFavorite()
+  const showToast = useToast()
   const [detail, setDetail] = useState(null)
   const [intro, setIntro] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -95,6 +99,29 @@ export default function DetailModal({ contentId, onClose }) {
         className="relative w-full max-w-md max-h-[70vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-[slideUp_0.25s_ease-out]"
         onClick={e => e.stopPropagation()}
       >
+        {/* 관심 추가/해제 (카드 하트와 상태 동기화) */}
+        {!loading && detail && (
+          <button
+            type="button"
+            onClick={() => {
+              const added = toggleFavorite({
+                contentid: detail.contentid,
+                title: detail.title,
+                addr1: detail.addr1,
+                firstimage: detail.firstimage ?? '',
+                eventenddate: intro?.eventenddate,
+              })
+              showToast(added ? '🧡 관심 목록에 추가했습니다' : '관심 목록에서 해제했습니다')
+            }}
+            aria-label={isFavorite(detail.contentid) ? '관심 해제' : '관심 추가'}
+            className={`absolute top-3 right-14 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow text-[17px] leading-none active:scale-90 transition-transform ${
+              isFavorite(detail.contentid) ? 'text-primary-500' : 'text-gray-300'
+            }`}
+          >
+            ♥
+          </button>
+        )}
+
         {/* 닫기 버튼 (로딩 중 비활성화) */}
         <button
           onClick={handleClose}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getLclsSystmName } from '../api/tourApi'
+import useFavorite from '../hooks/useFavorite'
+import { useToast } from './Toast'
 
 // YYYYMMDD 종료일 → 오늘까지 남은 일수 (D-day)
 function calcDday(endDateStr) {
@@ -23,6 +25,22 @@ export default function BenefitCard({ benefit, onClick }) {
   const { title, addr1, firstimage, tel, eventenddate, lclsSystm1, lclsSystm2, lclsSystm3 } = benefit
   const [catName, setCatName] = useState('...')
   const dday = calcDday(eventenddate)
+  const { toggleFavorite, isFavorite } = useFavorite()
+  const showToast = useToast()
+  const fav = isFavorite(benefit.contentid)
+
+  // 하트 클릭 시 카드 클릭(상세 팝업)과 분리
+  function handleFavClick(e) {
+    e.stopPropagation()
+    const added = toggleFavorite({
+      contentid: benefit.contentid,
+      title,
+      addr1,
+      firstimage: firstimage ?? '',
+      eventenddate,
+    })
+    showToast(added ? '🧡 관심 목록에 추가했습니다' : '관심 목록에서 해제했습니다')
+  }
 
   useEffect(() => {
     if (!lclsSystm1 && !lclsSystm2 && !lclsSystm3) {
@@ -54,6 +72,16 @@ export default function BenefitCard({ benefit, onClick }) {
             {dday === 0 ? 'D-day' : `D-${dday}`}
           </span>
         )}
+        <button
+          type="button"
+          onClick={handleFavClick}
+          aria-label={fav ? '관심 해제' : '관심 추가'}
+          className={`absolute top-1.5 right-1.5 w-[30px] h-[30px] flex items-center justify-center rounded-full bg-white/90 shadow text-[15px] leading-none active:scale-90 transition-transform ${
+            fav ? 'text-primary-500' : 'text-gray-300'
+          }`}
+        >
+          ♥
+        </button>
       </div>
       <div className="p-3 flex-1 flex flex-col">
         {catName && (
