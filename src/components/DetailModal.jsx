@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getDetailCommon, getDetailIntro } from '../api/tourApi'
 
 // HTML 태그/엔티티 정리 (<br> → 줄바꿈, 나머지 태그 제거, 엔티티 디코드)
@@ -17,6 +18,7 @@ function formatDate(str = '') {
 }
 
 export default function DetailModal({ contentId, onClose }) {
+  const navigate = useNavigate()
   const [detail, setDetail] = useState(null)
   const [intro, setIntro] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -223,10 +225,20 @@ export default function DetailModal({ contentId, onClose }) {
               )}
             </div>
 
-            {/* 주변 코스 스팟 보기 — 스크롤과 무관하게 팝업 하단 고정, 클릭 동작은 추후 구현 */}
+            {/* 주변 코스 스팟 보기 — 스크롤과 무관하게 팝업 하단 고정 */}
             <div className="sticky bottom-0 px-4 pb-4 pt-5 bg-gradient-to-t from-white via-white to-white/0">
               <button
                 type="button"
+                onClick={() =>
+                  navigate('/course/nearby', {
+                    state: {
+                      contentId: detail.contentid,
+                      title: detail.title,
+                      mapx: detail.mapx,
+                      mapy: detail.mapy,
+                    },
+                  })
+                }
                 className="w-full py-3 rounded-full bg-primary-500 text-white text-[15px] font-bold shadow-lg shadow-primary-500/30 active:scale-[0.97] transition-transform"
               >
                 📍 주변 코스 스팟 보기

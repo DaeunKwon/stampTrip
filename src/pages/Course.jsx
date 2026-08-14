@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import BenefitCard from '../components/BenefitCard'
 import DetailModal from '../components/DetailModal'
 import Pagination from '../components/Pagination'
@@ -26,11 +27,24 @@ function SkeletonCard() {
 }
 
 export default function Course() {
+  const location = useLocation()
+  const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [areaCode, setAreaCode] = useState('')
-  const [selectedId, setSelectedId] = useState(null)
+  // 주변 코스 스팟 화면에서 뒤로 돌아오면 보던 상세 팝업을 복원한다
+  const [selectedId, setSelectedId] = useState(location.state?.modalId ?? null)
   const [page, setPage] = useState(1)
+
+  // 팝업 열림 상태를 히스토리 엔트리에 남겨 depth+1 화면 진입 후에도 복원 가능하게 한다
+  function openDetail(id) {
+    setSelectedId(id)
+    navigate(location.pathname, { replace: true, state: { modalId: id } })
+  }
+  function closeDetail() {
+    setSelectedId(null)
+    navigate(location.pathname, { replace: true, state: null })
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -97,7 +111,7 @@ export default function Course() {
                 <BenefitCard
                   key={item.contentid ?? i}
                   benefit={item}
-                  onClick={() => setSelectedId(item.contentid)}
+                  onClick={() => openDetail(item.contentid)}
                 />
               ))}
             </div>
@@ -113,7 +127,7 @@ export default function Course() {
       </div>
 
       {selectedId && (
-        <DetailModal contentId={selectedId} onClose={() => setSelectedId(null)} />
+        <DetailModal contentId={selectedId} onClose={closeDetail} />
       )}
     </div>
   )

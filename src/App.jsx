@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Course from './pages/Course'
+import NearbySpots from './pages/NearbySpots'
 import Map from './pages/Map'
 import Archive from './pages/Archive'
 import Detail from './pages/Detail'
@@ -13,6 +14,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/course" element={<Course />} />
+          <Route path="/course/nearby" element={<NearbySpots />} />
           <Route path="/map" element={<Map />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/detail/:id" element={<Detail />} />
