@@ -6,7 +6,7 @@ import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarker
 import { getLocationBasedList } from '../api/tourApi'
 import StampCeremony from '../components/StampCeremony'
 
-export const STAMP_RADIUS = 200 // meters (테스트용 임시 확대)
+export const STAMP_RADIUS = 3000 // meters (테스트용 임시 확대 — 원래 200m)
 const RECENTER_THRESHOLD = 50 // meters — 지도 중심이 내 위치에서 이만큼 벗어나면 "내 위치로 이동" 버튼 표시
 
 export default function Map() {
