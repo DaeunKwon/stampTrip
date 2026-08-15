@@ -75,6 +75,12 @@ export default function Course() {
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE)
   const pagedItems = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
+  // 페이지 이동 시 목록 처음부터 보이도록 스크롤을 맨 위로 되돌린다
+  function handlePageChange(nextPage) {
+    setPage(nextPage)
+    window.scrollTo(0, 0)
+  }
+
   return (
     <div className="pt-6">
       <div className="px-4 mb-4">
@@ -115,7 +121,7 @@ export default function Course() {
                 />
               ))}
             </div>
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
           </>
         ) : (
           <div className="text-center py-20">

@@ -47,6 +47,12 @@ export default function Archive() {
     safePage * FAVORITES_PER_PAGE,
   )
 
+  // 페이지 이동 시 목록 처음부터 보이도록 스크롤을 맨 위로 되돌린다
+  function handlePageChange(nextPage) {
+    setPage(nextPage)
+    window.scrollTo(0, 0)
+  }
+
   function openDetail(id) {
     setSelectedId(id)
     navigate(location.pathname, { replace: true, state: { modalId: id } })
@@ -190,7 +196,7 @@ export default function Archive() {
                   />
                 ))}
               </div>
-              <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={handlePageChange} />
             </>
           )}
         </div>
