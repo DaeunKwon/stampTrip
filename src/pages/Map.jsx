@@ -26,8 +26,8 @@ export default function Map() {
   const [showFocusChip, setShowFocusChip] = useState(Boolean(focusSpot))
   // 방문 인증 도장 연출 상태: { title, count } (연출 중이 아니면 null)
   const [ceremony, setCeremony] = useState(null)
-  // 팝업을 닫은 관광지 contentid — 반경 내 자동 노출(autoSpot)이 곧바로 다시 띄우지 않도록 기억
-  const [dismissedId, setDismissedId] = useState(null)
+  // 닫기 버튼을 한 번이라도 누르면 true — 이후 이 지도 탭 방문 동안 자동 팝업(autoSpot)을 다시 띄우지 않는다
+  const [autoDismissed, setAutoDismissed] = useState(false)
   const [shaking, setShaking] = useState(false)
 
   const hasCenteredRef = useRef(false)
@@ -156,10 +156,9 @@ export default function Map() {
     })
   }, [mapReady, position, spots, focusSpot])
 
-  // 선택된 관광지가 없으면 반경 내 관광지를 자동으로 보여준다 (걸어서 진입했을 때)
-  const autoSpot = !selectedSpot && position
+  // 선택된 관광지가 없으면 반경 내 관광지를 자동으로 보여준다 (걸어서 진입했을 때). 단, 닫기 버튼을 누른 적이 있으면 다시 띄우지 않는다.
+  const autoSpot = !selectedSpot && !autoDismissed && position
     ? spots.find(spot =>
-        spot.contentid !== dismissedId &&
         calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx)) <= STAMP_RADIUS,
       ) ?? null
     : null
@@ -170,9 +169,9 @@ export default function Map() {
   const isDisplaySpotActive = displaySpotDistance !== null && displaySpotDistance <= STAMP_RADIUS
 
   const handleClosePopup = useCallback(() => {
-    if (displaySpot) setDismissedId(displaySpot.contentid)
+    setAutoDismissed(true)
     setSelectedSpot(null)
-  }, [displaySpot])
+  }, [])
 
   const handleStamp = useCallback(() => {
     if (!displaySpot || !isDisplaySpotActive) return
