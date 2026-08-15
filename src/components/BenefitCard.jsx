@@ -3,8 +3,8 @@ import { getLclsSystmName } from '../api/tourApi'
 import useFavorite from '../hooks/useFavorite'
 import { useToast } from './Toast'
 
-// YYYYMMDD 종료일 → 오늘까지 남은 일수 (D-day)
-function calcDday(endDateStr) {
+// YYYYMMDD 종료일 → 오늘까지 남은 일수 (D-day). 음수면 기간 종료.
+export function calcDday(endDateStr) {
   if (!endDateStr || endDateStr.length !== 8) return null
   const y = Number(endDateStr.slice(0, 4))
   const m = Number(endDateStr.slice(4, 6)) - 1
@@ -25,6 +25,8 @@ export default function BenefitCard({ benefit, onClick }) {
   const { title, addr1, firstimage, tel, eventenddate, lclsSystm1, lclsSystm2, lclsSystm3 } = benefit
   const [catName, setCatName] = useState('...')
   const dday = calcDday(eventenddate)
+  // 행사 기간이 지난 경우 카드 전체를 딤드 처리한다 (하트 버튼은 살려둠)
+  const ended = dday !== null && dday < 0
   const { toggleFavorite, isFavorite } = useFavorite()
   const showToast = useToast()
   const fav = isFavorite(benefit.contentid)
@@ -60,32 +62,48 @@ export default function BenefitCard({ benefit, onClick }) {
       onKeyDown={e => e.key === 'Enter' && onClick?.()}
       className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-transform">
       <div className="relative">
-        {firstimage ? (
-          <img src={firstimage} alt={title} className="w-full h-36 object-cover" loading="lazy" />
-        ) : (
-          <div className="w-full h-36 bg-primary-50 flex items-center justify-center">
-            <span className="text-4xl">🎁</span>
-          </div>
-        )}
+        <div className={ended ? 'grayscale opacity-50' : ''}>
+          {firstimage ? (
+            <img src={firstimage} alt={title} className="w-full h-36 object-cover" loading="lazy" />
+          ) : (
+            <div className="w-full h-36 bg-primary-50 flex items-center justify-center">
+              <span className="text-4xl">🎁</span>
+            </div>
+          )}
+        </div>
         {dday !== null && dday >= 0 && (
           <span className={`absolute top-2 left-2 text-[10px] font-extrabold text-white px-2 py-0.5 rounded-full ${ddayColorClass(dday)}`}>
             {dday === 0 ? 'D-day' : `D-${dday}`}
           </span>
+        )}
+        {ended && (
+          <>
+            <span className="absolute top-2 left-2 text-[10px] font-extrabold text-white bg-gray-500 px-2 py-0.5 rounded-full">
+              종료
+            </span>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <span className="text-[11px] font-bold text-white bg-gray-900/55 px-3 py-1 rounded-full backdrop-blur-[2px]">
+                종료된 행사
+              </span>
+            </div>
+          </>
         )}
         <button
           type="button"
           onClick={handleFavClick}
           aria-label={fav ? '관심 해제' : '관심 추가'}
           className={`absolute top-1.5 right-1.5 w-[30px] h-[30px] flex items-center justify-center rounded-full bg-white/90 shadow text-[15px] leading-none active:scale-90 transition-transform ${
-            fav ? 'text-primary-500' : 'text-gray-300'
+            ended ? 'text-gray-300' : fav ? 'text-primary-500' : 'text-gray-300'
           }`}
         >
           ♥
         </button>
       </div>
-      <div className="p-3 flex-1 flex flex-col">
+      <div className={`p-3 flex-1 flex flex-col ${ended ? 'opacity-40' : ''}`}>
         {catName && (
-          <span className="inline-block self-start px-2 py-0.5 bg-primary-100 text-primary-600 text-xs rounded-full mb-1.5">
+          <span className={`inline-block self-start px-2 py-0.5 text-xs rounded-full mb-1.5 ${
+            ended ? 'bg-gray-100 text-gray-400' : 'bg-primary-100 text-primary-600'
+          }`}>
             {catName}
           </span>
         )}

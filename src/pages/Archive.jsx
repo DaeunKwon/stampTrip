@@ -3,10 +3,18 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import useStamp from '../hooks/useStamp'
 import useFavorite from '../hooks/useFavorite'
 import StampBadge from '../components/StampBadge'
-import BenefitCard from '../components/BenefitCard'
+import BenefitCard, { calcDday } from '../components/BenefitCard'
 import DetailModal from '../components/DetailModal'
+import EndedFestivalModal from '../components/EndedFestivalModal'
 import Pagination from '../components/Pagination'
+import { useToast } from '../components/Toast'
 import { STAMP_RADIUS } from './Map'
+
+// 행사 기간이 지났는지 (종료일이 없으면 상시 정보로 보고 종료 아님)
+function isEnded(item) {
+  const dday = calcDday(item.eventenddate)
+  return dday !== null && dday < 0
+}
 
 const FAVORITES_PER_PAGE = 6
 
@@ -19,16 +27,22 @@ export default function Archive() {
   const location = useLocation()
   const navigate = useNavigate()
   const { stamps, unstamp, clear } = useStamp()
-  const { favorites } = useFavorite()
+  const { favorites, toggleFavorite } = useFavorite()
+  const showToast = useToast()
   const [tab, setTab] = useState('stamp')
   // 주변 코스 스팟 화면에서 뒤로 돌아오면 보던 상세 팝업을 복원한다 (코스/홈과 동일 패턴)
   const [selectedId, setSelectedId] = useState(location.state?.modalId ?? null)
+  // 종료된 행사를 클릭하면 상세 대신 종료 안내 팝업을 띄운다
+  const [endedItem, setEndedItem] = useState(null)
   const [page, setPage] = useState(1)
 
+  // 진행 중인 행사를 앞에, 종료된 행사를 뒤에 배치한다
+  const sortedFavorites = [...favorites].sort((a, b) => isEnded(a) - isEnded(b))
+
   // 관심 해제로 마지막 페이지가 비면 앞 페이지로 당긴다
-  const totalPages = Math.ceil(favorites.length / FAVORITES_PER_PAGE)
+  const totalPages = Math.ceil(sortedFavorites.length / FAVORITES_PER_PAGE)
   const safePage = Math.min(page, Math.max(totalPages, 1))
-  const pagedFavorites = favorites.slice(
+  const pagedFavorites = sortedFavorites.slice(
     (safePage - 1) * FAVORITES_PER_PAGE,
     safePage * FAVORITES_PER_PAGE,
   )
@@ -170,7 +184,9 @@ export default function Archive() {
                   <BenefitCard
                     key={item.contentid}
                     benefit={item}
-                    onClick={() => openDetail(item.contentid)}
+                    onClick={() =>
+                      isEnded(item) ? setEndedItem(item) : openDetail(item.contentid)
+                    }
                   />
                 ))}
               </div>
@@ -182,6 +198,18 @@ export default function Archive() {
 
       {selectedId && (
         <DetailModal contentId={selectedId} onClose={closeDetail} />
+      )}
+
+      {endedItem && (
+        <EndedFestivalModal
+          item={endedItem}
+          onRemove={() => {
+            toggleFavorite(endedItem)
+            showToast('관심 목록에서 해제했습니다')
+            setEndedItem(null)
+          }}
+          onClose={() => setEndedItem(null)}
+        />
       )}
     </div>
   )
