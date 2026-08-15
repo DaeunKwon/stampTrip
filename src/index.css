@@ -35,3 +35,44 @@
     opacity: 1;
   }
 }
+
+/* 방문 인증 도장 연출 (지도 탭) — 인장이 눈앞에서 지도 표면으로 다가와 찍힌다 */
+@keyframes stamp-press {
+  0%   { opacity: 0; transform: scale(3) rotate(5deg); filter: blur(1.5px); }
+  18%  { opacity: 0.85; }
+  100% { opacity: 1; transform: scale(1) rotate(-8deg); filter: blur(0); }
+}
+@keyframes stamp-squish {
+  0%   { transform: scale(1) rotate(-8deg); }
+  45%  { transform: scale(0.965) rotate(-8deg); }
+  100% { transform: scale(1) rotate(-8deg); }
+}
+@keyframes stamp-fade {
+  from { opacity: 1; }
+  to   { opacity: 0; transform: rotate(-8deg) scale(0.94); }
+}
+@keyframes stamp-shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-1.5px, 1px); }
+  50% { transform: translate(1.5px, -1px); }
+  75% { transform: translate(-1px, -1px); }
+}
+@keyframes stamp-shadow-in {
+  0%   { opacity: 0.08; transform: scale(1.7); }
+  100% { opacity: 0.5; transform: scale(0.98); }
+}
+@keyframes stamp-shadow-out {
+  to { opacity: 0; transform: scale(1.6); }
+}
+@keyframes stamp-ink-fly {
+  0%   { opacity: 0.85; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+.stamp-shake { animation: stamp-shake 0.25s linear; }
+.stamp-seal-press { animation: stamp-press 0.5s cubic-bezier(0.5, 0, 0.85, 0.35) forwards; }
+.stamp-seal-hold { opacity: 1; animation: stamp-squish 0.28s ease forwards; }
+.stamp-seal-fade { opacity: 1; animation: stamp-fade 0.5s ease forwards; }
+.stamp-shadow-press { animation: stamp-shadow-in 0.5s cubic-bezier(0.5, 0, 0.85, 0.35) forwards; }
+.stamp-shadow-gone { animation: stamp-shadow-out 0.45s ease forwards; }
+.stamp-ink { animation: stamp-ink-fly 0.5s cubic-bezier(0.1, 0.6, 0.4, 1) forwards; }

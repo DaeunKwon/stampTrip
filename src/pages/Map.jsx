@@ -4,6 +4,7 @@ import useGPS from '../hooks/useGPS'
 import useStamp from '../hooks/useStamp'
 import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarkerImage, createFocusMarkerImage } from '../api/kakaoMap'
 import { getLocationBasedList } from '../api/tourApi'
+import StampCeremony from '../components/StampCeremony'
 
 export const STAMP_RADIUS = 200 // meters (테스트용 임시 확대)
 const RECENTER_THRESHOLD = 50 // meters — 지도 중심이 내 위치에서 이만큼 벗어나면 "내 위치로 이동" 버튼 표시
@@ -23,6 +24,9 @@ export default function Map() {
   const [mapError, setMapError] = useState(null)
   const [mapCenter, setMapCenter] = useState(null)
   const [showFocusChip, setShowFocusChip] = useState(Boolean(focusSpot))
+  // 방문 인증 도장 연출 상태: { title, count } (연출 중이 아니면 null)
+  const [ceremony, setCeremony] = useState(null)
+  const [shaking, setShaking] = useState(false)
 
   const hasCenteredRef = useRef(false)
 
@@ -168,7 +172,14 @@ export default function Map() {
       addr1: displaySpot.addr1,
       firstimage: displaySpot.firstimage ?? '',
     })
-  }, [displaySpot, isDisplaySpotActive, stamp])
+    setCeremony({ title: displaySpot.title, count: stamps.length + 1 })
+  }, [displaySpot, isDisplaySpotActive, stamp, stamps.length])
+
+  // 인장 착지 순간 지도 화면을 미세하게 흔든다
+  const handleStampImpact = useCallback(() => {
+    setShaking(true)
+    setTimeout(() => setShaking(false), 300)
+  }, [])
 
   // 지도 중심이 내 위치에서 일정 거리 이상 벗어났는지
   const showRecenter = position && mapCenter
@@ -182,7 +193,7 @@ export default function Map() {
   }, [position])
 
   return (
-    <div className="relative h-[calc(100vh-4rem)]">
+    <div className={`relative h-[calc(100vh-4rem)] ${shaking ? 'stamp-shake' : ''}`}>
       {/* 지도 컨테이너 */}
       <div ref={mapContainerRef} className="absolute inset-0" />
 
@@ -285,6 +296,16 @@ export default function Map() {
           </div>
         )}
       </div>
+
+      {/* 방문 인증 도장 연출 */}
+      {ceremony && (
+        <StampCeremony
+          title={ceremony.title}
+          count={ceremony.count}
+          onImpact={handleStampImpact}
+          onDone={() => setCeremony(null)}
+        />
+      )}
     </div>
   )
 }
