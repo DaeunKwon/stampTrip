@@ -26,6 +26,8 @@ export default function Map() {
   const [showFocusChip, setShowFocusChip] = useState(Boolean(focusSpot))
   // 방문 인증 도장 연출 상태: { title, count } (연출 중이 아니면 null)
   const [ceremony, setCeremony] = useState(null)
+  // 팝업을 닫은 관광지 contentid — 반경 내 자동 노출(autoSpot)이 곧바로 다시 띄우지 않도록 기억
+  const [dismissedId, setDismissedId] = useState(null)
   const [shaking, setShaking] = useState(false)
 
   const hasCenteredRef = useRef(false)
@@ -156,13 +158,21 @@ export default function Map() {
 
   // 선택된 관광지가 없으면 반경 내 관광지를 자동으로 보여준다 (걸어서 진입했을 때)
   const autoSpot = !selectedSpot && position
-    ? spots.find(spot => calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx)) <= STAMP_RADIUS) ?? null
+    ? spots.find(spot =>
+        spot.contentid !== dismissedId &&
+        calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx)) <= STAMP_RADIUS,
+      ) ?? null
     : null
   const displaySpot = selectedSpot ?? autoSpot
   const displaySpotDistance = displaySpot && position
     ? calcDistance(position.lat, position.lng, Number(displaySpot.mapy), Number(displaySpot.mapx))
     : null
   const isDisplaySpotActive = displaySpotDistance !== null && displaySpotDistance <= STAMP_RADIUS
+
+  const handleClosePopup = useCallback(() => {
+    if (displaySpot) setDismissedId(displaySpot.contentid)
+    setSelectedSpot(null)
+  }, [displaySpot])
 
   const handleStamp = useCallback(() => {
     if (!displaySpot || !isDisplaySpotActive) return
@@ -259,11 +269,21 @@ export default function Map() {
       {/* 스탬프 패널 */}
       <div className="absolute bottom-3 left-3 right-3 z-10">
         {displaySpot ? (
-          <div className="bg-white rounded-2xl shadow-xl px-4 py-4">
+          <div className="relative bg-white rounded-2xl shadow-xl px-4 py-4">
+            <button
+              onClick={handleClosePopup}
+              aria-label="팝업 닫기"
+              className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 active:scale-95 transition-transform"
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+              </svg>
+            </button>
             {isDisplaySpotActive ? (
               <>
                 <p className="text-xs text-primary-500 font-medium mb-0.5">📍 근처 관광지 발견!</p>
-                <p className="font-bold text-gray-800 text-base mb-3">{displaySpot.title}</p>
+                <p className="font-bold text-gray-800 text-base mb-3 pr-8">{displaySpot.title}</p>
                 {isStamped(displaySpot.contentid) ? (
                   <div className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl text-sm text-center border border-gray-100">
                     ✓ 이미 인증된 장소입니다
@@ -280,7 +300,7 @@ export default function Map() {
             ) : (
               <>
                 <p className="text-xs text-gray-400 font-medium mb-0.5">📍 선택한 관광지</p>
-                <p className="font-bold text-gray-800 text-base mb-1">{displaySpot.title}</p>
+                <p className="font-bold text-gray-800 text-base mb-1 pr-8">{displaySpot.title}</p>
                 <p className="text-xs text-gray-400 mb-3">
                   현재 위치에서 {Math.round(displaySpotDistance)}m · 반경 {STAMP_RADIUS}m 밖
                 </p>
