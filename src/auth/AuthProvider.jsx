@@ -82,7 +82,13 @@ export function AuthProvider({ children }) {
   const signInWith = useCallback(async provider => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: window.location.origin,
+        // 브라우저에 소셜 계정이 이미 로그인돼 있어도 매번 계정 선택 화면을 거치게 한다.
+        // (여러 계정을 쓰는 사용자 배려 + 탈퇴 후 재가입 시 자동으로 통과되지 않도록)
+        // 구글: select_account = 계정 선택 화면 / 카카오: select_account = 계정 선택 또는 간편 로그인 화면
+        queryParams: { prompt: 'select_account' },
+      },
     })
     if (error) throw error
   }, [])
