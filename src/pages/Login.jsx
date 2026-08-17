@@ -35,6 +35,24 @@ export default function Login() {
     clearInitError()
   }, [initError, showToast, clearInitError])
 
+  // 소셜 인증 창(사파리 시트·구글 팝업 등)을 사용자가 그냥 닫고 돌아오면 이 페이지가 살아 있는 채로 다시 보인다.
+  // 그때 "로그인 중…" 상태가 남지 않도록, 페이지가 다시 보이는 순간과 일정 시간 경과 후 pending 을 되돌린다.
+  useEffect(() => {
+    if (!pending) return
+    const reset = () => setPending(null)
+    const onVisible = () => { if (document.visibilityState === 'visible') reset() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('pageshow', reset)
+    window.addEventListener('focus', reset)
+    const timer = setTimeout(reset, 15000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('pageshow', reset)
+      window.removeEventListener('focus', reset)
+      clearTimeout(timer)
+    }
+  }, [pending])
+
   if (loading) return <Splash />
   // 이미 로그인돼 있으면 원래 가려던 곳(없으면 홈)으로. 프로필 유무는 RequireAuth 가 판단한다
   if (session) return <Navigate to={location.state?.from || '/'} replace />
