@@ -9,7 +9,8 @@
 | 혜택 통합 보드 | 지역별 관광지 할인 · 행사 · 프로모션 카드 UI |
 | 명소 코스 추천 | 도보 거리 · 동선 기준 1~3일 코스 자동 제공 |
 | GPS 스탬프 인증 | 관광지 반경 100m 진입 시 스탬프 버튼 활성화 |
-| 나의 여행 아카이브 | 수집한 스탬프 · 코스 이력 개인 저장소 누적 |
+| 나의 여행 아카이브 | 수집한 스탬프 · 관심 목록을 계정에 저장 (기기 간 동기화) |
+| 소셜 로그인 | 카카오 · Google 계정으로 가입/로그인 (로그인 필수) |
 | 혜택-코스-인증 연계 | 코스 내 관광지 혜택 자동 매칭 |
 
 ## 기술 스택
@@ -19,7 +20,7 @@
 - **React Router v6** (클라이언트 라우팅)
 - **한국관광공사 TourAPI** (관광 데이터)
 - **카카오맵 API** (지도 · GPS 거리 계산)
-- **localStorage** (스탬프 영구 저장)
+- **Supabase** (카카오 · Google 소셜 로그인, 스탬프 · 관심 목록 DB 저장)
 
 ## 실행 방법
 
@@ -97,7 +98,11 @@ npm install
 ```env
 VITE_TOUR_API_KEY=발급받은_투어API_키
 VITE_KAKAO_MAP_KEY=발급받은_카카오_앱키
+VITE_SUPABASE_URL=https://xxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=발급받은_supabase_anon_키
 ```
+
+> 로그인(Supabase · 카카오 로그인 · Google 로그인) 설정은 **[docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)** 를 따라 진행하세요. Supabase 값이 없으면 앱은 뜨지만 로그인이 동작하지 않습니다.
 
 ### 4. 개발 서버 실행
 
@@ -126,6 +131,8 @@ npm run preview  # 빌드 결과 미리보기
    |---|---|
    | `VITE_TOUR_API_KEY` | 발급받은 투어API 키 |
    | `VITE_KAKAO_MAP_KEY` | 발급받은 카카오 JavaScript 키 |
+   | `VITE_SUPABASE_URL` | Supabase Project URL |
+   | `VITE_SUPABASE_ANON_KEY` | Supabase anon public 키 |
    | `BASIC_AUTH_USER` | 테스터에게 알려줄 아이디 |
    | `BASIC_AUTH_PASS` | 테스터에게 알려줄 비밀번호 |
 3. **Deploy** 클릭 → 완료되면 `https://프로젝트명.vercel.app` 형태의 URL 생성
@@ -167,35 +174,49 @@ npm run preview  # 빌드 결과 미리보기
 ```
 src/
 ├── pages/
-│   ├── Home.jsx          # 메인 (혜택 보드 + 추천 코스 미리보기)
-│   ├── Benefits.jsx      # 혜택 통합 보드
-│   ├── Course.jsx        # 명소 코스 추천
-│   ├── Map.jsx           # 지도 + GPS 스탬프 인증
-│   ├── Archive.jsx       # 나의 여행 아카이브
-│   └── Detail.jsx        # 관광지 상세
-├── components/
-│   ├── Navbar.jsx        # 하단 탭 네비게이션
-│   ├── BenefitCard.jsx   # 혜택 카드
-│   ├── CourseCard.jsx    # 코스 카드
-│   ├── StampBadge.jsx    # 스탬프 뱃지
-│   ├── SpotCard.jsx      # 관광지 카드
-│   ├── DetailModal.jsx   # 관광지 상세 정보 모달
-│   └── Pagination.jsx    # 페이지네이션 (혜택 탭)
-├── api/
-│   ├── tourApi.js        # TourAPI 호출 모듈
-│   └── kakaoMap.js       # 카카오맵 초기화 · 거리 계산
-├── hooks/
-│   ├── useGPS.js         # GPS 위치 추적 훅
-│   └── useStamp.js       # 스탬프 상태 관리 훅
+│   ├── Login.jsx           # 소셜 로그인 (카카오 · Google)
+│   ├── Onboarding.jsx      # 첫 가입 닉네임 설정
+│   ├── Home.jsx            # 메인 (혜택 보드 + 추천 코스 미리보기)
+│   ├── Course.jsx          # 명소 코스 추천
+│   ├── NearbySpots.jsx     # 코스 주변 명소
+│   ├── Map.jsx             # 지도 + GPS 스탬프 인증
+│   ├── Archive.jsx         # 마이 탭 (프로필 · 스탬프 · 관심 목록)
+│   ├── AccountSettings.jsx # 계정 설정 (닉네임 · 로그아웃 · 탈퇴)
+│   ├── Detail.jsx          # 관광지 상세
+│   └── Terms.jsx / Privacy.jsx  # 이용약관 · 개인정보처리방침
+├── auth/
+│   ├── AuthProvider.jsx    # 세션 · 프로필 상태 (useAuth)
+│   └── RequireAuth.jsx     # 로그인 필수 라우트 가드
 ├── store/
-│   └── stampStore.js     # 스탬프 localStorage 저장소
-└── assets/
+│   └── UserDataProvider.jsx # 스탬프 · 관심 목록 (Supabase, useUserData)
+├── components/
+│   ├── Navbar.jsx          # 하단 탭 네비게이션
+│   ├── ProfileCard.jsx     # 마이 탭 프로필 카드
+│   ├── BenefitCard.jsx     # 혜택 카드
+│   ├── CourseCard.jsx      # 코스 카드
+│   ├── StampBadge.jsx      # 스탬프 뱃지
+│   ├── DetailModal.jsx     # 관광지 상세 정보 모달
+│   └── Pagination.jsx      # 페이지네이션
+├── api/
+│   ├── supabase.js         # Supabase 클라이언트
+│   ├── tourApi.js          # TourAPI 호출 모듈
+│   └── kakaoMap.js         # 카카오맵 초기화 · 거리 계산
+└── hooks/
+    ├── useGPS.js           # GPS 위치 추적 훅
+    ├── useStamp.js         # 스탬프 (UserDataProvider 래퍼)
+    └── useFavorite.js      # 관심 목록 (UserDataProvider 래퍼)
+supabase/
+└── schema.sql              # 테이블 · RLS · 탈퇴 RPC (SQL Editor에 실행)
+docs/
+└── SUPABASE_SETUP.md       # 로그인 콘솔 설정 가이드
 ```
 
 ## 주요 설계 결정
 
 - **스탬프 인증 반경**: 100m (GPS 정확도 고려 · `Map.jsx`에서 export하는 `STAMP_RADIUS` 상수로 조정, `Archive.jsx` 안내 문구도 같은 상수를 참조)
 - **카카오맵 동적 로드**: `autoload=false` + `kakao.maps.load()` 패턴으로 렌더링 블로킹 방지
+- **로그인 필수 · 소셜 전용**: 아이디/비밀번호 없이 카카오·Google OAuth만 지원. 신규/기존 판별은 `profiles` 행 존재 여부로만 한다
+- **데이터는 Supabase에만**: 스탬프·관심 목록은 낙관적 업데이트 후 서버 반영, 실패 시 롤백 + 토스트. RLS로 본인 행만 접근
 - **TourAPI 인코딩**: 공공데이터포털 일반 인증키(Decoding) 사용 — URL 이중 인코딩 불필요
 
 ---
@@ -208,3 +229,5 @@ src/
 | 지도 탭에서 지도가 안 뜸: 콘솔에 `domain mismatched` | Kakao Developers에 현재 도메인(`http://localhost:5173` 등)이 등록되지 않음 | 앱 설정 → 플랫폼 → Web에 도메인 추가 |
 | 지도 탭에서 지도가 안 뜸: 콘솔에 `disabled OPEN_MAP_AND_LOCAL service` | 카카오맵 제품이 앱에서 비활성화 상태 | 제품 설정 → 카카오맵 → 활성화 ON |
 | 혜택/코스 탭에 데이터가 안 뜸 | TourAPI 키 미설정 또는 활용신청 미승인 | `.env`의 `VITE_TOUR_API_KEY` 확인, 공공데이터포털에서 활용신청 상태 확인 |
+| 로그인 화면에 "Supabase 환경변수 설정이 필요해요" | `.env`에 `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` 없음 | `docs/SUPABASE_SETUP.md` 4번 참고 후 dev 서버 재시작 |
+| 카카오/Google 인증 후 다시 로그인 화면으로 돌아옴, `redirect_uri_mismatch`, `KOE006` 등 | 콘솔 설정(Redirect URI · Supabase Redirect URLs) 누락 | `docs/SUPABASE_SETUP.md` 문제 해결 표 참고 |

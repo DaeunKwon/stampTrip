@@ -7,6 +7,7 @@ import BenefitCard, { calcDday } from '../components/BenefitCard'
 import DetailModal from '../components/DetailModal'
 import EndedFestivalModal from '../components/EndedFestivalModal'
 import Pagination from '../components/Pagination'
+import ProfileCard from '../components/ProfileCard'
 import { useToast } from '../components/Toast'
 import { STAMP_RADIUS } from './Map'
 
@@ -70,26 +71,11 @@ export default function Archive() {
 
   return (
     <div className="pt-6">
-      {/* 헤더 */}
-      <div className="flex items-start justify-between px-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">마이 페이지</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            스탬프 {stamps.length}개 수집 · 관심 {favorites.length}개
-          </p>
-        </div>
-        {tab === 'stamp' && stamps.length > 0 && (
-          <button
-            onClick={handleClear}
-            className="text-xs text-red-400 border border-red-200 px-3 py-1.5 rounded-full"
-          >
-            초기화
-          </button>
-        )}
-      </div>
+      {/* 헤더: 프로필 카드 + 카운트 */}
+      <ProfileCard stampCount={stamps.length} favoriteCount={favorites.length} />
 
       {/* 구분 탭 */}
-      <div className="flex border-b-[1.5px] border-gray-200 mt-4 mb-5">
+      <div className="flex border-b-[1.5px] border-gray-200 mt-5 mb-5">
         {TABS.map(t => (
           <button
             key={t.key}
@@ -120,7 +106,15 @@ export default function Archive() {
             <>
               {/* 스탬프 그리드 */}
               <section className="mb-8">
-                <h2 className="text-sm font-bold text-gray-700 mb-4">스탬프 컬렉션</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-bold text-gray-700">스탬프 컬렉션</h2>
+                  <button
+                    onClick={handleClear}
+                    className="text-[11px] text-red-400 border border-red-200 px-2.5 py-1 rounded-full"
+                  >
+                    초기화
+                  </button>
+                </div>
                 <div className="grid grid-cols-3 gap-x-2 gap-y-5">
                   {stamps.map(spot => (
                     <div key={spot.contentId} className="flex flex-col items-center gap-1">

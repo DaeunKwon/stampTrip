@@ -1,19 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
-import { getFavorites, toggleFavorite as toggleFavoriteStore, subscribeFavorites } from '../store/favoriteStore'
+import { useUserData } from '../store/UserDataProvider'
 
+/** 관심 목록/조작. toggleFavorite 는 추가됐으면 true 를 동기 반환한다 (토스트 문구 분기용). */
 export default function useFavorite() {
-  const [favorites, setFavorites] = useState(() => getFavorites())
-
-  // 다른 컴포넌트(카드/팝업)에서 토글해도 함께 갱신되도록 스토어를 구독한다
-  useEffect(() => subscribeFavorites(setFavorites), [])
-
-  // 토글 후 추가됐으면 true 반환 (토스트 문구 분기에 사용)
-  const toggleFavorite = useCallback(item => toggleFavoriteStore(item), [])
-
-  const isFavorite = useCallback(
-    contentid => favorites.some(f => f.contentid === contentid),
-    [favorites],
-  )
-
+  const { favorites, toggleFavorite, isFavorite } = useUserData()
   return { favorites, toggleFavorite, isFavorite }
 }
