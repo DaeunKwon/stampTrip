@@ -31,6 +31,8 @@ export default function Map() {
   const [shaking, setShaking] = useState(false)
 
   const hasCenteredRef = useRef(false)
+  // 지도 중심이 확정(GPS 수신/오류 확정/명소 좌표)된 뒤의 최초 관광지 조회를 정확히 한 번만 실행하기 위한 가드
+  const initialFetchDoneRef = useRef(false)
 
   const { position, loading: gpsLoading, error: gpsError } = useGPS()
   const { stamps, stamp, isStamped } = useStamp()
@@ -70,31 +72,46 @@ export default function Map() {
     hasCenteredRef.current = true
   }, [mapReady, position])
 
+  // 현재 지도 중심 기준으로 뷰포트 범위의 관광지를 조회한다.
+  // idle 리스너뿐 아니라 "지도 중심이 확정된 시점" effect에서도 직접 호출하므로,
+  // 카카오맵 이벤트 트리거에 기대지 않고 항상 같은 함수를 그대로 실행한다.
+  const fetchByViewport = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+    const bounds = map.getBounds()
+    const center = map.getCenter()
+    const ne = bounds.getNorthEast()
+    const radius = Math.min(
+      Math.round(calcDistance(center.getLat(), center.getLng(), ne.getLat(), ne.getLng())),
+      20000,
+    )
+    setMapCenter({ lat: center.getLat(), lng: center.getLng() })
+    getLocationBasedList({ mapX: center.getLng(), mapY: center.getLat(), radius })
+      // 음식(lclsSystm1 'FD') 분류는 지도에 노출하지 않는다
+      .then(items => setSpots(items.filter(item => item.lclsSystm1 !== 'FD')))
+      .catch(() => {})
+  }, [])
+
   // 지도 화면 범위(뷰포트)가 바뀔 때마다(드래그/줌 후 idle) 그 범위의 관광지를 재조회
+  // (최초 진입 시 즉시 조회하지 않는다 — 아직 지도 중심이 내 위치로 확정되기 전일 수 있기 때문. 아래 별도 effect가 담당)
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
     const maps = window.kakao.maps
     const map = mapRef.current
-
-    function fetchByViewport() {
-      const bounds = map.getBounds()
-      const center = map.getCenter()
-      const ne = bounds.getNorthEast()
-      const radius = Math.min(
-        Math.round(calcDistance(center.getLat(), center.getLng(), ne.getLat(), ne.getLng())),
-        20000,
-      )
-      setMapCenter({ lat: center.getLat(), lng: center.getLng() })
-      getLocationBasedList({ mapX: center.getLng(), mapY: center.getLat(), radius })
-        // 음식(lclsSystm1 'FD') 분류는 지도에 노출하지 않는다
-        .then(items => setSpots(items.filter(item => item.lclsSystm1 !== 'FD')))
-        .catch(() => {})
-    }
-
     maps.event.addListener(map, 'idle', fetchByViewport)
-    fetchByViewport()
     return () => maps.event.removeListener(map, 'idle', fetchByViewport)
-  }, [mapReady])
+  }, [mapReady, fetchByViewport])
+
+  // 지도 중심이 확정된 시점(GPS 위치 수신, GPS 오류 확정, 또는 명소 좌표로 진입)에 최초 1회 관광지를 조회한다.
+  // 카카오맵 SDK가 이미 캐시돼 재진입 시 mapReady가 GPS 위치보다 먼저 true가 되더라도,
+  // 이 effect가 실제 중심이 정해질 때까지 기다렸다가 fetchByViewport를 직접 호출하므로
+  // 잘못된 기본 중심(서울시청)으로 조회하는 일이 없다.
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || initialFetchDoneRef.current) return
+    if (!position && !gpsError && !focusSpot) return
+    initialFetchDoneRef.current = true
+    fetchByViewport()
+  }, [mapReady, position, gpsError, focusSpot, fetchByViewport])
 
   // 지도 마커 갱신
   useEffect(() => {
