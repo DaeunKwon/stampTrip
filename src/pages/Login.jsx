@@ -12,19 +12,28 @@ const PROVIDERS = [
 ]
 
 export default function Login() {
-  const { loading, session, isConfigured, signInWithKakao, signInWithGoogle } = useAuth()
+  const { loading, session, isConfigured, initError, clearInitError, signInWithKakao, signInWithGoogle } = useAuth()
   const showToast = useToast()
   const location = useLocation()
   const [pending, setPending] = useState(null) // 'kakao' | 'google' | null
 
-  // 소셜 인증 후 앱으로 돌아왔을 때 URL 해시에 error 가 실려오면 안내
+  // 소셜 인증 후 앱으로 돌아왔을 때 URL(해시 또는 쿼리)에 error 가 실려오면 안내
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-    if (hash.get('error')) {
-      showToast('로그인에 실패했어요. 다시 시도해 주세요')
+    const query = new URLSearchParams(window.location.search)
+    const desc = hash.get('error_description') || query.get('error_description')
+    if (hash.get('error') || query.get('error')) {
+      showToast(desc ? `로그인 실패: ${desc}` : '로그인에 실패했어요. 다시 시도해 주세요')
       window.history.replaceState(null, '', window.location.pathname)
     }
   }, [showToast])
+
+  // Supabase 가 URL 의 토큰을 세션으로 바꾸는 데 실패한 경우 (Redirect URL 미등록, 만료 등)
+  useEffect(() => {
+    if (!initError) return
+    showToast(`로그인 처리 실패: ${initError}`)
+    clearInitError()
+  }, [initError, showToast, clearInitError])
 
   if (loading) return <Splash />
   // 이미 로그인돼 있으면 원래 가려던 곳(없으면 홈)으로. 프로필 유무는 RequireAuth 가 판단한다

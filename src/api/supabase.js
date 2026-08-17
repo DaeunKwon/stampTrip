@@ -14,4 +14,15 @@ export const isSupabaseConfigured = Boolean(url && anonKey)
 export const supabase = createClient(
   url || 'https://placeholder.supabase.co',
   anonKey || 'placeholder-anon-key',
+  {
+    auth: {
+      // implicit: 토큰이 URL 해시로 직접 돌아온다. PKCE 는 로그인을 시작한 브라우저 컨텍스트에만
+      // code_verifier 가 저장돼서, 홈 화면 PWA·카카오톡 인앱 브라우저처럼 인증 후 다른 컨텍스트로
+      // 돌아오는 경우 세션 생성에 조용히 실패한다. SPA 이므로 implicit 으로 그 문제를 피한다.
+      flowType: 'implicit',
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  },
 )

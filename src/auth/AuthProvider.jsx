@@ -29,6 +29,8 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  // 소셜 인증 후 돌아왔을 때 세션 생성에 실패한 이유 (로그인 화면에서 토스트로 안내)
+  const [initError, setInitError] = useState(null)
 
   const loadProfile = useCallback(async userId => {
     const { data } = await supabase
@@ -46,8 +48,12 @@ export function AuthProvider({ children }) {
     }
     let cancelled = false
 
-    // 최초 1회: 저장된 세션 복원 → 프로필 조회
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // 최초 1회: URL 에 실려온 토큰 처리 + 저장된 세션 복원 → 프로필 조회
+    // initialize() 는 소셜 인증 후 돌아왔을 때 URL 파싱/세션 저장 결과를 돌려주므로, 실패를 여기서 잡아 알린다
+    supabase.auth.initialize().then(async ({ error }) => {
+      if (cancelled) return
+      if (error) setInitError(error.message)
+      const { data: { session } } = await supabase.auth.getSession()
       if (cancelled) return
       setSession(session)
       if (session?.user) setProfile(await loadProfile(session.user.id))
@@ -127,6 +133,8 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({
     isConfigured: isSupabaseConfigured,
     loading,
+    initError,
+    clearInitError: () => setInitError(null),
     session,
     user: pickUserInfo(session?.user),
     profile,
@@ -136,7 +144,7 @@ export function AuthProvider({ children }) {
     createProfile,
     updateNickname,
     deleteAccount,
-  }), [loading, session, profile, signInWith, signOut, createProfile, updateNickname, deleteAccount])
+  }), [loading, initError, session, profile, signInWith, signOut, createProfile, updateNickname, deleteAccount])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
