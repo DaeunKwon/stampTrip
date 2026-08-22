@@ -17,11 +17,19 @@ export function courseDistance(event, spots) {
   return total
 }
 
+/**
+ * 보이는 영역 정보.
+ * - height: 키패드를 제외한 실제 보이는 높이
+ * - bottomInset: 레이아웃 뷰포트 바닥에서 보이는 영역 바닥까지의 거리 = 키패드가 가린 높이
+ *   (iOS Safari 처럼 레이아웃 뷰포트가 안 줄어드는 환경에서 > 0, PWA/Android 처럼 줄어드는 환경에서는 0)
+ */
 function readViewport() {
   const vv = typeof window !== 'undefined' ? window.visualViewport : null
-  return vv
-    ? { top: vv.offsetTop, height: vv.height }
-    : { top: 0, height: window.innerHeight }
+  if (!vv) return { height: window.innerHeight, bottomInset: 0 }
+  return {
+    height: vv.height,
+    bottomInset: Math.max(0, window.innerHeight - vv.offsetTop - vv.height),
+  }
 }
 
 export function formatCourseTotal(totalM) {
@@ -57,9 +65,11 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
     const update = () => setViewport(readViewport())
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
     return () => {
       vv.removeEventListener('resize', update)
       vv.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
     }
   }, [])
 
@@ -70,9 +80,8 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
     return () => clearTimeout(timer)
   }, [inputFocused, viewport.height])
 
-  const keyboardOpen = viewport.height < window.innerHeight - 100
-  // 평소엔 보이는 영역의 78%, 키패드가 떠 있으면 남은 영역을 거의 다 쓴다
-  const sheetMaxHeight = keyboardOpen ? viewport.height - 12 : Math.round(viewport.height * 0.78)
+  // 평소엔 보이는 영역의 78%, 이름 입력 중(키패드)엔 남은 영역을 거의 다 쓴다
+  const sheetMaxHeight = inputFocused ? viewport.height - 12 : Math.round(viewport.height * 0.78)
 
   function onDragStart(e) {
     // 이름 입력 중엔 키패드 조작과 충돌하지 않도록 드래그 닫기를 잠시 끈다
@@ -106,10 +115,9 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
 
   return (
     // 하단 탭바(Navbar, z-50)보다 위에 떠야 시트 아래쪽이 가려지지 않는다
-    // 오버레이는 레이아웃 뷰포트가 아니라 "보이는 영역"에 맞춘다 — 키패드가 떠도 시트가 키패드 위쪽 영역 안에 들어간다
+    // 오버레이는 항상 화면 전체(탭바 포함)를 덮고, 키패드가 뜨면 시트만 키패드 높이(bottomInset)만큼 띄운다
     <div
-      className="fixed left-0 right-0 z-[60] flex items-end justify-center touch-none"
-      style={{ top: viewport.top, height: viewport.height }}
+      className="fixed inset-0 z-[60] flex items-end justify-center touch-none"
       onClick={saving ? undefined : onClose}
     >
       <div className="absolute inset-0 bg-black/45" />
@@ -117,7 +125,7 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
         className={`relative w-full max-w-md overflow-y-auto overscroll-contain touch-auto bg-white rounded-t-3xl shadow-2xl px-4 pb-6 animate-[slideUp_0.25s_ease-out] ${
           dragStartRef.current === null ? 'transition-transform duration-200' : ''
         }`}
-        style={{ transform: `translateY(${dragY}px)`, maxHeight: sheetMaxHeight }}
+        style={{ transform: `translateY(${dragY}px)`, maxHeight: sheetMaxHeight, marginBottom: viewport.bottomInset }}
         onClick={e => e.stopPropagation()}
       >
         {/* 손잡이 + 제목: 이 영역을 끌어내리면 시트가 닫힌다 */}
