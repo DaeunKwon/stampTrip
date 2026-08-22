@@ -146,9 +146,17 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
         className={`relative w-full max-w-md overflow-y-auto overscroll-contain touch-auto bg-white rounded-t-3xl shadow-2xl px-4 pb-6 animate-[slideUp_0.25s_ease-out] ${
           dragStartRef.current === null ? 'transition-transform duration-200' : ''
         }`}
-        style={{ transform: `translateY(${dragY}px)`, maxHeight: sheetMaxHeight, marginBottom: viewport.bottomInset }}
+        style={{
+          transform: `translateY(${dragY}px)`,
+          // 입력 중엔 높이를 고정해서 내용이 짧아도(코스 1개) 시트가 항상 스크롤 가능한 상태를 유지한다.
+          // 시트가 스크롤 불가능하면 iOS 가 터치 스크롤을 뒤 페이지로 넘겨 버린다 (overscroll-contain 이 안 먹음)
+          ...(inputFocused ? { height: sheetMaxHeight } : { maxHeight: sheetMaxHeight }),
+          marginBottom: viewport.bottomInset,
+        }}
         onClick={e => e.stopPropagation()}
       >
+       {/* 입력 중엔 내용이 시트보다 최소 1px 넘치게 해서 스크롤 제스처를 시트가 소비하게 한다 */}
+       <div className={inputFocused ? 'min-h-[calc(100%+1px)]' : ''}>
         {/* 손잡이 + 제목: 이 영역을 끌어내리면 시트가 닫힌다 */}
         <div
           className="pt-2.5 touch-none select-none"
@@ -232,6 +240,7 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
             {saving ? '저장 중…' : '코스 저장'}
           </button>
         </div>
+       </div>
       </div>
     </div>
   )
