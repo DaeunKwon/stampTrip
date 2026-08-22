@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import useGPS from '../hooks/useGPS'
 import useStamp from '../hooks/useStamp'
-import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarkerImage, createFocusMarkerImage } from '../api/kakaoMap'
+import { loadKakaoMap, calcDistance, createSpotMarkerImage, createLocationMarkerImage, createFocusMarkerImage, createStampedMarkerImage } from '../api/kakaoMap'
 import { getLocationBasedList } from '../api/tourApi'
 import StampCeremony from '../components/StampCeremony'
 
@@ -136,13 +136,18 @@ export default function Map() {
       markersRef.current.push(myMarker)
     }
 
-    // 관광지 마커 — 화면 범위 내 관광지는 모두 표시하고, 내 위치 반경 내: 진하게 / 밖: 옅게.
-    // 활성 여부와 무관하게 클릭하면 정보를 볼 수 있다.
+    // 관광지 마커 — 화면 범위 내 관광지는 모두 표시하며 상태에 따라 세 가지로 구분한다.
+    //   인증 완료: 회색 체크 핀 (거리와 무관하게 항상 진하게)
+    //   활성(반경 내, 미인증): 오렌지 핀 진하게
+    //   비활성(반경 밖, 미인증): 오렌지 핀 옅게
+    // 상태와 무관하게 클릭하면 정보를 볼 수 있다.
     // 주변 코스 스팟에서 선택해 들어온 명소는 큰 전용 마커 + 이름 라벨로 강조한다.
     const spotImage = createSpotMarkerImage(maps)
+    const stampedImage = createStampedMarkerImage(maps)
     const focusImage = focusSpot ? createFocusMarkerImage(maps) : null
     spots.forEach(spot => {
       const isFocus = focusSpot?.contentid === spot.contentid
+      const stamped = isStamped(spot.contentid)
       const active = position
         ? calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx)) <= STAMP_RADIUS
         : false
@@ -152,9 +157,9 @@ export default function Map() {
         map,
         position: pos,
         title: spot.title,
-        image: isFocus ? focusImage : spotImage,
-        opacity: isFocus || active ? 1 : 0.4,
-        zIndex: isFocus ? 5 : 0,
+        image: isFocus ? focusImage : stamped ? stampedImage : spotImage,
+        opacity: isFocus || stamped || active ? 1 : 0.4,
+        zIndex: isFocus ? 5 : stamped ? 1 : 0,
       })
       maps.event.addListener(marker, 'click', () => setSelectedSpot(spot))
       markersRef.current.push(marker)
@@ -171,11 +176,13 @@ export default function Map() {
         markersRef.current.push(label)
       }
     })
-  }, [mapReady, position, spots, focusSpot])
+  }, [mapReady, position, spots, focusSpot, isStamped])
 
-  // 선택된 관광지가 없으면 반경 내 관광지를 자동으로 보여준다 (걸어서 진입했을 때). 단, 닫기 버튼을 누른 적이 있으면 다시 띄우지 않는다.
+  // 선택된 관광지가 없으면 반경 내 미인증 관광지를 자동으로 보여준다 (걸어서 진입했을 때).
+  // 이미 인증한 곳은 자동으로 띄우지 않고, 닫기 버튼을 누른 적이 있으면 다시 띄우지 않는다.
   const autoSpot = !selectedSpot && !autoDismissed && position
     ? spots.find(spot =>
+        !isStamped(spot.contentid) &&
         calcDistance(position.lat, position.lng, Number(spot.mapy), Number(spot.mapx)) <= STAMP_RADIUS,
       ) ?? null
     : null
@@ -184,6 +191,7 @@ export default function Map() {
     ? calcDistance(position.lat, position.lng, Number(displaySpot.mapy), Number(displaySpot.mapx))
     : null
   const isDisplaySpotActive = displaySpotDistance !== null && displaySpotDistance <= STAMP_RADIUS
+  const isDisplaySpotStamped = displaySpot ? isStamped(displaySpot.contentid) : false
 
   const handleClosePopup = useCallback(() => {
     setAutoDismissed(true)
@@ -191,7 +199,7 @@ export default function Map() {
   }, [])
 
   const handleStamp = useCallback(() => {
-    if (!displaySpot || !isDisplaySpotActive) return
+    if (!displaySpot || !isDisplaySpotActive || isDisplaySpotStamped) return
     stamp({
       contentId: displaySpot.contentid,
       title: displaySpot.title,
@@ -199,7 +207,7 @@ export default function Map() {
       firstimage: displaySpot.firstimage ?? '',
     })
     setCeremony({ title: displaySpot.title, count: stamps.length + 1 })
-  }, [displaySpot, isDisplaySpotActive, stamp, stamps.length])
+  }, [displaySpot, isDisplaySpotActive, isDisplaySpotStamped, stamp, stamps.length])
 
   // 인장 착지 순간 지도 화면을 미세하게 흔든다
   const handleStampImpact = useCallback(() => {
@@ -296,22 +304,24 @@ export default function Map() {
                 <line x1="18" y1="6" x2="6" y2="18" />
               </svg>
             </button>
-            {isDisplaySpotActive ? (
+            {isDisplaySpotStamped ? (
+              <>
+                <p className="text-xs text-gray-500 font-medium mb-0.5">✓ 인증 완료한 관광지</p>
+                <p className="font-bold text-gray-800 text-base mb-3 pr-8">{displaySpot.title}</p>
+                <div className="w-full py-3 bg-gray-100 text-gray-500 rounded-xl text-sm text-center font-medium">
+                  ✓ 이미 인증된 장소입니다
+                </div>
+              </>
+            ) : isDisplaySpotActive ? (
               <>
                 <p className="text-xs text-primary-500 font-medium mb-0.5">📍 근처 관광지 발견!</p>
                 <p className="font-bold text-gray-800 text-base mb-3 pr-8">{displaySpot.title}</p>
-                {isStamped(displaySpot.contentid) ? (
-                  <div className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl text-sm text-center border border-gray-100">
-                    ✓ 이미 인증된 장소입니다
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleStamp}
-                    className="w-full py-3.5 bg-primary-500 text-white rounded-xl text-sm font-bold shadow-md shadow-primary-200 active:scale-95 transition-transform"
-                  >
-                    🗺️ 스탬프 찍기
-                  </button>
-                )}
+                <button
+                  onClick={handleStamp}
+                  className="w-full py-3.5 bg-primary-500 text-white rounded-xl text-sm font-bold shadow-md shadow-primary-200 active:scale-95 transition-transform"
+                >
+                  🗺️ 스탬프 찍기
+                </button>
               </>
             ) : (
               <>
