@@ -11,11 +11,19 @@ export default function MyStamps() {
   const { stamps, unstamp, clear } = useStamp()
   const showToast = useToast()
   const [confirmClear, setConfirmClear] = useState(false)
+  // 개별 삭제 확인 대상 스탬프 (null 이면 팝업 없음)
+  const [confirmTarget, setConfirmTarget] = useState(null)
 
   function handleClear() {
     setConfirmClear(false)
     clear()
     showToast('스탬프를 모두 삭제했어요')
+  }
+
+  function handleUnstamp() {
+    unstamp(confirmTarget.contentId)
+    setConfirmTarget(null)
+    showToast('스탬프를 삭제했어요')
   }
 
   return (
@@ -55,7 +63,7 @@ export default function MyStamps() {
                       size="md"
                     />
                     <button
-                      onClick={() => unstamp(spot.contentId)}
+                      onClick={() => setConfirmTarget(spot)}
                       className="text-[10px] text-gray-300 underline underline-offset-2"
                     >
                       삭제
@@ -97,6 +105,17 @@ export default function MyStamps() {
           </>
         )}
       </div>
+
+      {confirmTarget && (
+        <ConfirmModal
+          title="스탬프를 삭제할까요?"
+          message={`${confirmTarget.title}의 방문 기록이 함께 사라져요.`}
+          confirmLabel="삭제하기"
+          danger
+          onConfirm={handleUnstamp}
+          onClose={() => setConfirmTarget(null)}
+        />
+      )}
 
       {confirmClear && (
         <ConfirmModal
