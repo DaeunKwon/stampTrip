@@ -3,7 +3,7 @@ import LegalLayout from './LegalLayout'
 export default function Privacy() {
   return (
     <LegalLayout title="개인정보처리방침" updated="2026년 8월 17일">
-      <p>스탬프트립(이하 "서비스")은 이용자의 개인정보를 소중히 다루며, 아래와 같이 처리합니다.</p>
+      <p>스탬프여행(이하 "서비스")은 이용자의 개인정보를 소중히 다루며, 아래와 같이 처리합니다.</p>
 
       <h2>1. 수집하는 항목</h2>
       <ul>

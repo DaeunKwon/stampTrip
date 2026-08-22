@@ -34,7 +34,7 @@ export default function Onboarding() {
   return (
     <div className="max-w-md mx-auto min-h-screen bg-gray-50 px-6 pt-8">
       <h1 className="text-xl font-extrabold text-gray-900 leading-snug">거의 다 됐어요 🎉</h1>
-      <p className="text-xs text-gray-500 mt-1.5">스탬프트립에서 쓸 닉네임을 정해주세요</p>
+      <p className="text-xs text-gray-500 mt-1.5">스탬프여행에서 쓸 닉네임을 정해주세요</p>
 
       <div className="flex flex-col items-center gap-2 mt-7">
         <div className="relative">
