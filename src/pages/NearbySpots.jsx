@@ -83,25 +83,39 @@ export default function NearbySpots() {
             {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
           </div>
         ) : spots.length > 0 ? (
-          <div className="flex flex-col gap-2.5 pb-4">
+          <div className="flex flex-col gap-3 pb-4">
             {spots.map((spot, i) => (
-              <div
-                key={spot.contentid ?? i}
-                role="button"
-                tabIndex={0}
-                onClick={() => goMap(spot)}
-                onKeyDown={e => e.key === 'Enter' && goMap(spot)}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
-              >
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-0.5">{spot.title}</h3>
-                  <p className="text-xs text-gray-500 truncate">{spot.addr1 || '주소 정보 없음'}</p>
-                </div>
-                {formatDist(spot.dist) && (
-                  <span className="flex-shrink-0 text-[11px] font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">
-                    {formatDist(spot.dist)}
+              <div key={spot.contentid ?? i} className="flex gap-3">
+                <div className="flex flex-col items-center w-6 flex-shrink-0">
+                  <span className="w-6 h-6 rounded-full bg-primary-500 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+                    {i + 1}
                   </span>
-                )}
+                  {i < spots.length - 1 && <span className="flex-1 w-0.5 bg-primary-100 mt-1" />}
+                </div>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => goMap(spot)}
+                  onKeyDown={e => e.key === 'Enter' && goMap(spot)}
+                  className="flex-1 min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                >
+                  <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-primary-50 flex items-center justify-center overflow-hidden">
+                    {spot.firstimage ? (
+                      <img src={spot.firstimage} alt={spot.title} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <span className="text-lg">📍</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-0.5">{spot.title}</h3>
+                    <p className="text-xs text-gray-500 truncate">{spot.addr1 || '주소 정보 없음'}</p>
+                  </div>
+                  {formatDist(spot.dist) && (
+                    <span className="flex-shrink-0 text-[11px] font-bold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">
+                      {formatDist(spot.dist)}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
