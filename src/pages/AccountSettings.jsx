@@ -66,7 +66,7 @@ export default function AccountSettings() {
         className="px-4 h-8 flex items-center gap-1.5 text-gray-500 text-sm"
       >
         <span className="text-base leading-none">‹</span>
-        <span className="text-xs font-semibold text-gray-600">마이 페이지</span>
+        <span className="text-xs font-semibold text-gray-600">My 탭</span>
       </button>
       <h1 className="px-4 mt-3 text-lg font-extrabold text-gray-900">계정 설정</h1>
 

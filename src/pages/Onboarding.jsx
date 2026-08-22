@@ -64,7 +64,7 @@ export default function Onboarding() {
             </span>
           </div>
           <p className={`text-[10.5px] mt-1.5 ${error && nickname ? 'text-red-500' : 'text-gray-400'}`}>
-            {error && nickname ? error : '마이 페이지에 표시돼요 · 나중에 바꿀 수 있어요'}
+            {error && nickname ? error : 'My 탭에 표시돼요 · 나중에 바꿀 수 있어요'}
           </p>
         </label>
 

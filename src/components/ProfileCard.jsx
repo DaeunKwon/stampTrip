@@ -16,7 +16,7 @@ export default function ProfileCard({ stampCount, favoriteCount }) {
   return (
     <div className="px-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">마이 페이지</h1>
+        <h1 className="text-xl font-bold text-gray-900">My 탭</h1>
         <Link
           to="/settings"
           aria-label="계정 설정"
