@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { calcDistance } from '../api/kakaoMap'
 
 export const COURSE_NAME_MAX = 30
@@ -17,6 +17,13 @@ export function courseDistance(event, spots) {
   return total
 }
 
+function readViewport() {
+  const vv = typeof window !== 'undefined' ? window.visualViewport : null
+  return vv
+    ? { top: vv.offsetTop, height: vv.height }
+    : { top: 0, height: window.innerHeight }
+}
+
 export function formatCourseTotal(totalM) {
   return `약 ${(totalM / 1000).toFixed(1)}km · ${Math.max(1, Math.round(totalM / WALK_M_PER_MIN))}분`
 }
@@ -31,9 +38,45 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
   // 손잡이 영역을 아래로 끌어 내리면 닫힌다 (모바일). dragY 는 현재 끌어내린 거리(px)
   const [dragY, setDragY] = useState(0)
   const dragStartRef = useRef(null)
+  const inputRef = useRef(null)
+  const [inputFocused, setInputFocused] = useState(false)
+  // 실제로 보이는 영역(visualViewport). 모바일 키패드가 뜨면 이 값이 줄어든다
+  const [viewport, setViewport] = useState(() => readViewport())
+
+  // 시트가 떠 있는 동안 뒤 페이지 스크롤 잠금 (DetailModal 과 동일)
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prevOverflow }
+  }, [])
+
+  // 키패드가 뜨거나 내려갈 때 보이는 영역 크기에 맞춰 오버레이를 다시 맞춘다
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => setViewport(readViewport())
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [])
+
+  // 키패드가 올라온 뒤 입력칸이 가려지지 않게 시트 안에서 보이는 위치로 당긴다
+  useEffect(() => {
+    if (!inputFocused) return
+    const timer = setTimeout(() => inputRef.current?.scrollIntoView({ block: 'nearest' }), 250)
+    return () => clearTimeout(timer)
+  }, [inputFocused, viewport.height])
+
+  const keyboardOpen = viewport.height < window.innerHeight - 100
+  // 평소엔 보이는 영역의 78%, 키패드가 떠 있으면 남은 영역을 거의 다 쓴다
+  const sheetMaxHeight = keyboardOpen ? viewport.height - 12 : Math.round(viewport.height * 0.78)
 
   function onDragStart(e) {
-    if (saving) return
+    // 이름 입력 중엔 키패드 조작과 충돌하지 않도록 드래그 닫기를 잠시 끈다
+    if (saving || inputFocused) return
     dragStartRef.current = e.touches[0].clientY
   }
   function onDragMove(e) {
@@ -63,13 +106,18 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
 
   return (
     // 하단 탭바(Navbar, z-50)보다 위에 떠야 시트 아래쪽이 가려지지 않는다
-    <div className="fixed inset-0 z-[60] flex items-end justify-center" onClick={saving ? undefined : onClose}>
+    // 오버레이는 레이아웃 뷰포트가 아니라 "보이는 영역"에 맞춘다 — 키패드가 떠도 시트가 키패드 위쪽 영역 안에 들어간다
+    <div
+      className="fixed left-0 right-0 z-[60] flex items-end justify-center touch-none"
+      style={{ top: viewport.top, height: viewport.height }}
+      onClick={saving ? undefined : onClose}
+    >
       <div className="absolute inset-0 bg-black/45" />
       <div
-        className={`relative w-full max-w-md max-h-[78vh] overflow-y-auto bg-white rounded-t-3xl shadow-2xl px-4 pb-6 animate-[slideUp_0.25s_ease-out] ${
+        className={`relative w-full max-w-md overflow-y-auto overscroll-contain touch-auto bg-white rounded-t-3xl shadow-2xl px-4 pb-6 animate-[slideUp_0.25s_ease-out] ${
           dragStartRef.current === null ? 'transition-transform duration-200' : ''
         }`}
-        style={{ transform: `translateY(${dragY}px)` }}
+        style={{ transform: `translateY(${dragY}px)`, maxHeight: sheetMaxHeight }}
         onClick={e => e.stopPropagation()}
       >
         {/* 손잡이 + 제목: 이 영역을 끌어내리면 시트가 닫힌다 */}
@@ -87,8 +135,11 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
 
         <div className="relative mt-3.5">
           <input
+            ref={inputRef}
             value={name}
             onChange={e => setName(e.target.value.slice(0, COURSE_NAME_MAX))}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
             aria-label="코스 이름"
             className="w-full px-3.5 py-2.5 pr-14 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 outline-none focus:bg-white focus:border-primary-500 focus:ring-[3px] focus:ring-primary-100"
           />
