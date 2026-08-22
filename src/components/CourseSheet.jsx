@@ -20,15 +20,18 @@ export function courseDistance(event, spots) {
 /**
  * 보이는 영역 정보.
  * - height: 키패드를 제외한 실제 보이는 높이
- * - bottomInset: 레이아웃 뷰포트 바닥에서 보이는 영역 바닥까지의 거리 = 키패드가 가린 높이
- *   (iOS Safari 처럼 레이아웃 뷰포트가 안 줄어드는 환경에서 > 0, PWA/Android 처럼 줄어드는 환경에서는 0)
+ * - bottomInset: 오버레이(fixed inset-0)의 실제 바닥이 보이는 영역 바닥보다 얼마나 아래에 있는지 = 시트를 띄워야 하는 높이.
+ *   iOS 는 키패드가 뜰 때 fixed 요소를 키패드 위로 올려주는 경우(→ 0)와 안 올려주는 경우(→ 키패드 높이)가
+ *   버전/모드마다 달라서, 계산으로 추정하지 않고 렌더된 오버레이 위치를 직접 재서 보정한다.
  */
-function readViewport() {
+function readViewport(overlayEl) {
   const vv = typeof window !== 'undefined' ? window.visualViewport : null
   if (!vv) return { height: window.innerHeight, bottomInset: 0 }
+  const visibleBottom = vv.offsetTop + vv.height
+  const overlayBottom = overlayEl ? overlayEl.getBoundingClientRect().bottom : window.innerHeight
   return {
     height: vv.height,
-    bottomInset: Math.max(0, window.innerHeight - vv.offsetTop - vv.height),
+    bottomInset: Math.max(0, Math.round(overlayBottom - visibleBottom)),
   }
 }
 
@@ -47,9 +50,10 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
   const [dragY, setDragY] = useState(0)
   const dragStartRef = useRef(null)
   const inputRef = useRef(null)
+  const overlayRef = useRef(null)
   const [inputFocused, setInputFocused] = useState(false)
   // 실제로 보이는 영역(visualViewport). 모바일 키패드가 뜨면 이 값이 줄어든다
-  const [viewport, setViewport] = useState(() => readViewport())
+  const [viewport, setViewport] = useState(() => readViewport(null))
 
   // 시트가 떠 있는 동안 뒤 페이지 스크롤 잠금 (DetailModal 과 동일)
   useEffect(() => {
@@ -62,16 +66,31 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
-    const update = () => setViewport(readViewport())
+    // 레이아웃이 끝난 뒤 재야 fixed 오버레이의 실제 위치가 잡힌다
+    let raf = 0
+    const update = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => setViewport(readViewport(overlayRef.current)))
+    }
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
     window.addEventListener('resize', update)
+    update()
     return () => {
+      cancelAnimationFrame(raf)
       vv.removeEventListener('resize', update)
       vv.removeEventListener('scroll', update)
       window.removeEventListener('resize', update)
     }
   }, [])
+
+  // 키패드 애니메이션 중에는 이벤트가 한 번만 오기도 해서, 포커스 변화 후 몇 차례 더 재서 맞춘다
+  useEffect(() => {
+    const timers = [80, 200, 350, 600].map(ms =>
+      setTimeout(() => setViewport(readViewport(overlayRef.current)), ms),
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [inputFocused])
 
   // 키패드가 올라온 뒤 입력칸이 가려지지 않게 시트 안에서 보이는 위치로 당긴다
   useEffect(() => {
@@ -117,10 +136,12 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
     // 하단 탭바(Navbar, z-50)보다 위에 떠야 시트 아래쪽이 가려지지 않는다
     // 오버레이는 항상 화면 전체(탭바 포함)를 덮고, 키패드가 뜨면 시트만 키패드 높이(bottomInset)만큼 띄운다
     <div
+      ref={overlayRef}
       className="fixed inset-0 z-[60] flex items-end justify-center touch-none"
       onClick={saving ? undefined : onClose}
     >
-      <div className="absolute inset-0 bg-black/45" />
+      {/* 어두운 배경은 위아래로 넉넉히 늘려서, iOS 가 키패드 때문에 fixed 영역을 옮겨도 빈틈이 안 생기게 한다 */}
+      <div className="absolute left-0 right-0 -top-[100vh] -bottom-[100vh] bg-black/45" />
       <div
         className={`relative w-full max-w-md overflow-y-auto overscroll-contain touch-auto bg-white rounded-t-3xl shadow-2xl px-4 pb-6 animate-[slideUp_0.25s_ease-out] ${
           dragStartRef.current === null ? 'transition-transform duration-200' : ''
