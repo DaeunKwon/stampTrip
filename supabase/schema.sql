@@ -43,11 +43,34 @@ create table if not exists public.favorites (
 create index if not exists favorites_user_id_idx on public.favorites(user_id);
 
 -- ─────────────────────────────────────────────
+-- 3-1. 내 코스 (주변 코스 스팟에서 직접 골라 만든 코스)
+--      spots: 방문 순서대로 정렬된 관광지 배열
+--      [{ contentid, title, addr1, firstimage, mapx, mapy }, ...]
+-- ─────────────────────────────────────────────
+create table if not exists public.courses (
+  id                bigint generated always as identity primary key,
+  user_id           uuid not null references public.profiles(id) on delete cascade,
+  name              text not null check (char_length(name) between 1 and 30),
+  event_content_id  text,
+  event_title       text,
+  event_mapx        text,
+  event_mapy        text,
+  spots             jsonb not null default '[]'::jsonb,
+  created_at        timestamptz not null default now()
+);
+create index if not exists courses_user_id_idx on public.courses(user_id);
+
+-- ─────────────────────────────────────────────
 -- 4. RLS: 본인 데이터만 읽고 쓸 수 있게
 -- ─────────────────────────────────────────────
 alter table public.profiles  enable row level security;
 alter table public.stamps    enable row level security;
 alter table public.favorites enable row level security;
+alter table public.courses   enable row level security;
+
+drop policy if exists "courses: own" on public.courses;
+create policy "courses: own" on public.courses
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "profiles: own" on public.profiles;
 create policy "profiles: own" on public.profiles
@@ -63,7 +86,7 @@ create policy "favorites: own" on public.favorites
 
 -- ─────────────────────────────────────────────
 -- 5. 회원 탈퇴 RPC: 로그인한 본인 계정을 auth.users에서 삭제
---    (profiles / stamps / favorites 는 FK cascade 로 함께 삭제됨)
+--    (profiles / stamps / favorites / courses 는 FK cascade 로 함께 삭제됨)
 -- ─────────────────────────────────────────────
 create or replace function public.delete_my_account()
 returns void

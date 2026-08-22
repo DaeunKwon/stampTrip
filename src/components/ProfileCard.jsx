@@ -9,8 +9,8 @@ function joinedLabel(iso) {
   return `${d.getFullYear()}년 ${d.getMonth() + 1}월부터 함께`
 }
 
-/** 마이 탭 상단: 프로필 카드 + 스탬프/관심 카운트 */
-export default function ProfileCard({ stampCount, favoriteCount }) {
+/** My 탭 상단: 프로필 카드 + 내 코스/스탬프/관심 카운트 (카운트는 각 상세 화면으로 가는 링크) */
+export default function ProfileCard({ courseCount, stampCount, favoriteCount }) {
   const { user, profile } = useAuth()
 
   return (
@@ -38,18 +38,19 @@ export default function ProfileCard({ stampCount, favoriteCount }) {
       </div>
 
       <div className="mt-2.5 flex gap-2">
-        <StatCard value={stampCount} label="스탬프" />
-        <StatCard value={favoriteCount} label="관심 목록" />
+        <StatCard to="/my/courses" value={courseCount} label="내 코스" />
+        <StatCard to="/my/stamps" value={stampCount} label="스탬프" />
+        <StatCard to="/my/favorites" value={favoriteCount} label="관심 목록" />
       </div>
     </div>
   )
 }
 
-function StatCard({ value, label }) {
+function StatCard({ to, value, label }) {
   return (
-    <div className="flex-1 bg-white border border-gray-200 rounded-xl py-2.5 text-center">
+    <Link to={to} className="flex-1 bg-white border border-gray-200 rounded-xl py-2.5 text-center active:bg-gray-50">
       <p className="text-base font-extrabold text-primary-600 tabular-nums">{value}</p>
       <p className="text-[10.5px] text-gray-500">{label}</p>
-    </div>
+    </Link>
   )
 }

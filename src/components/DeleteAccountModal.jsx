@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 /** 회원 탈퇴 확인 팝업. EndedFestivalModal 과 같은 틀. */
-export default function DeleteAccountModal({ stampCount, favoriteCount, busy, onConfirm, onClose }) {
+export default function DeleteAccountModal({ courseCount = 0, stampCount, favoriteCount, busy, onConfirm, onClose }) {
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && !busy && onClose()
     document.addEventListener('keydown', onKey)
@@ -23,7 +23,7 @@ export default function DeleteAccountModal({ stampCount, favoriteCount, busy, on
         <p className="text-4xl mb-2.5">😢</p>
         <h3 className="text-[15px] font-extrabold text-gray-900 mb-1.5">정말 탈퇴할까요?</h3>
         <p className="text-xs text-gray-500 leading-relaxed mb-5">
-          스탬프 {stampCount}개와 관심 목록 {favoriteCount}개가<br />
+          내 코스 {courseCount}개, 스탬프 {stampCount}개, 관심 목록 {favoriteCount}개가<br />
           모두 삭제되고 되돌릴 수 없어요
         </p>
         <button

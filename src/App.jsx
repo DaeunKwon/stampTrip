@@ -10,6 +10,10 @@ import Course from './pages/Course'
 import NearbySpots from './pages/NearbySpots'
 import Map from './pages/Map'
 import Archive from './pages/Archive'
+import MyCourses from './pages/MyCourses'
+import CourseDetail from './pages/CourseDetail'
+import MyStamps from './pages/MyStamps'
+import MyFavorites from './pages/MyFavorites'
 import Detail from './pages/Detail'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
@@ -65,6 +69,10 @@ export default function App() {
         <Route path="/course/nearby" element={<NearbySpots />} />
         <Route path="/map" element={<Map />} />
         <Route path="/archive" element={<Archive />} />
+        <Route path="/my/courses" element={<MyCourses />} />
+        <Route path="/my/courses/:id" element={<CourseDetail />} />
+        <Route path="/my/stamps" element={<MyStamps />} />
+        <Route path="/my/favorites" element={<MyFavorites />} />
         <Route path="/detail/:id" element={<Detail />} />
         <Route path="/settings" element={<AccountSettings />} />
         <Route path="*" element={<Home />} />

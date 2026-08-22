@@ -22,6 +22,18 @@ const favoriteFromRow = r => ({
   eventenddate: r.event_end_date ?? '',
   savedAt: r.saved_at,
 })
+const courseFromRow = r => ({
+  id: r.id,
+  name: r.name,
+  event: {
+    contentId: r.event_content_id,
+    title: r.event_title,
+    mapx: r.event_mapx,
+    mapy: r.event_mapy,
+  },
+  spots: Array.isArray(r.spots) ? r.spots : [],
+  createdAt: r.created_at,
+})
 
 /**
  * 로그인한 사용자의 스탬프/관심 목록을 Supabase 에서 불러와 앱 전체에 제공한다.
@@ -34,13 +46,16 @@ export function UserDataProvider({ children }) {
 
   const [stamps, setStamps] = useState([])
   const [favorites, setFavorites] = useState([])
+  const [courses, setCourses] = useState([])
   const [loaded, setLoaded] = useState(false)
 
   // 콜백에서 최신 목록을 읽기 위한 ref (롤백·중복 판정용)
   const stampsRef = useRef(stamps)
   const favoritesRef = useRef(favorites)
+  const coursesRef = useRef(courses)
   stampsRef.current = stamps
   favoritesRef.current = favorites
+  coursesRef.current = courses
 
   useEffect(() => {
     if (!userId) return
@@ -49,11 +64,13 @@ export function UserDataProvider({ children }) {
     Promise.all([
       supabase.from('stamps').select('*').eq('user_id', userId).order('stamped_at', { ascending: true }),
       supabase.from('favorites').select('*').eq('user_id', userId).order('saved_at', { ascending: true }),
-    ]).then(([s, f]) => {
+      supabase.from('courses').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+    ]).then(([s, f, c]) => {
       if (cancelled) return
-      if (s.error || f.error) showToast('기록을 불러오지 못했어요')
+      if (s.error || f.error || c.error) showToast('기록을 불러오지 못했어요')
       setStamps((s.data ?? []).map(stampFromRow))
       setFavorites((f.data ?? []).map(favoriteFromRow))
+      setCourses((c.data ?? []).map(courseFromRow))
       setLoaded(true)
     })
     return () => { cancelled = true }
@@ -125,11 +142,39 @@ export function UserDataProvider({ children }) {
 
   const isFavorite = useCallback(contentid => favorites.some(f => f.contentid === contentid), [favorites])
 
+  // ── 내 코스 ───────────────────────────────────────
+  /** 서버가 발급한 id 가 필요하므로 낙관적 반영 대신 저장 완료 후 목록에 넣는다. 실패 시 throw. */
+  const addCourse = useCallback(async ({ name, event, spots }) => {
+    if (!userId) throw new Error('로그인이 필요합니다')
+    const { data, error } = await supabase.from('courses').insert({
+      user_id: userId,
+      name,
+      event_content_id: event?.contentId ?? null,
+      event_title: event?.title ?? null,
+      event_mapx: event?.mapx != null ? String(event.mapx) : null,
+      event_mapy: event?.mapy != null ? String(event.mapy) : null,
+      spots,
+    }).select('*').single()
+    if (error) throw error
+    const course = courseFromRow(data)
+    setCourses([course, ...coursesRef.current])
+    return course
+  }, [userId])
+
+  const deleteCourse = useCallback(id => {
+    if (!userId) return
+    const prev = coursesRef.current
+    setCourses(prev.filter(c => c.id !== id))
+    supabase.from('courses').delete().eq('user_id', userId).eq('id', id)
+      .then(({ error }) => { if (error) { setCourses(prev); fail() } })
+  }, [userId, fail])
+
   const value = useMemo(() => ({
     loaded,
     stamps, stamp, unstamp, isStamped, clear,
     favorites, toggleFavorite, isFavorite,
-  }), [loaded, stamps, stamp, unstamp, isStamped, clear, favorites, toggleFavorite, isFavorite])
+    courses, addCourse, deleteCourse,
+  }), [loaded, stamps, stamp, unstamp, isStamped, clear, favorites, toggleFavorite, isFavorite, courses, addCourse, deleteCourse])
 
   return <UserDataContext.Provider value={value}>{children}</UserDataContext.Provider>
 }

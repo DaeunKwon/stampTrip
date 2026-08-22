@@ -16,7 +16,7 @@ function maskEmail(email) {
 
 export default function AccountSettings() {
   const { user, profile, updateNickname, signOut, deleteAccount } = useAuth()
-  const { stamps, favorites } = useUserData()
+  const { stamps, favorites, courses } = useUserData()
   const showToast = useToast()
   const navigate = useNavigate()
 
@@ -144,6 +144,7 @@ export default function AccountSettings() {
 
       {confirmDelete && (
         <DeleteAccountModal
+          courseCount={courses.length}
           stampCount={stamps.length}
           favoriteCount={favorites.length}
           busy={deleting}

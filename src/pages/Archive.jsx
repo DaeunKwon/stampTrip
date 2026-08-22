@@ -1,216 +1,64 @@
-import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import useStamp from '../hooks/useStamp'
 import useFavorite from '../hooks/useFavorite'
-import StampBadge from '../components/StampBadge'
-import BenefitCard, { calcDday } from '../components/BenefitCard'
-import DetailModal from '../components/DetailModal'
-import EndedFestivalModal from '../components/EndedFestivalModal'
-import Pagination from '../components/Pagination'
+import useCourse from '../hooks/useCourse'
 import ProfileCard from '../components/ProfileCard'
-import { useToast } from '../components/Toast'
-import { STAMP_RADIUS } from './Map'
 
-// 행사 기간이 지났는지 (종료일이 없으면 상시 정보로 보고 종료 아님)
-function isEnded(item) {
-  const dday = calcDday(item.eventenddate)
-  return dday !== null && dday < 0
-}
-
-const FAVORITES_PER_PAGE = 6
-
-const TABS = [
-  { key: 'stamp', label: '🗺️ 스탬프' },
-  { key: 'fav',   label: '🧡 관심 목록' },
-]
-
+/** My 탭: 프로필 + 메뉴 허브. 각 메뉴는 한 단계 들어간 상세 화면으로 이동한다. */
 export default function Archive() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { stamps, unstamp, clear } = useStamp()
-  const { favorites, toggleFavorite } = useFavorite()
-  const showToast = useToast()
-  const [tab, setTab] = useState('stamp')
-  // 주변 코스 스팟 화면에서 뒤로 돌아오면 보던 상세 팝업을 복원한다 (코스/홈과 동일 패턴)
-  const [selectedId, setSelectedId] = useState(location.state?.modalId ?? null)
-  // 종료된 행사를 클릭하면 상세 대신 종료 안내 팝업을 띄운다
-  const [endedItem, setEndedItem] = useState(null)
-  const [page, setPage] = useState(1)
-
-  // 진행 중인 행사를 앞에, 종료된 행사를 뒤에 배치한다
-  const sortedFavorites = [...favorites].sort((a, b) => isEnded(a) - isEnded(b))
-
-  // 관심 해제로 마지막 페이지가 비면 앞 페이지로 당긴다
-  const totalPages = Math.ceil(sortedFavorites.length / FAVORITES_PER_PAGE)
-  const safePage = Math.min(page, Math.max(totalPages, 1))
-  const pagedFavorites = sortedFavorites.slice(
-    (safePage - 1) * FAVORITES_PER_PAGE,
-    safePage * FAVORITES_PER_PAGE,
-  )
-
-  // 페이지 이동 시 목록 처음부터 보이도록 스크롤을 맨 위로 되돌린다
-  function handlePageChange(nextPage) {
-    setPage(nextPage)
-    window.scrollTo(0, 0)
-  }
-
-  function openDetail(id) {
-    setSelectedId(id)
-    navigate(location.pathname, { replace: true, state: { modalId: id } })
-  }
-  function closeDetail() {
-    setSelectedId(null)
-    navigate(location.pathname, { replace: true, state: null })
-  }
-
-  function handleClear() {
-    if (window.confirm('모든 스탬프를 삭제할까요? 되돌릴 수 없습니다.')) {
-      clear()
-    }
-  }
+  const { stamps } = useStamp()
+  const { favorites } = useFavorite()
+  const { courses } = useCourse()
 
   return (
-    <div className="pt-6">
-      {/* 헤더: 프로필 카드 + 카운트 */}
-      <ProfileCard stampCount={stamps.length} favoriteCount={favorites.length} />
+    <div className="pt-6 pb-6">
+      <ProfileCard courseCount={courses.length} stampCount={stamps.length} favoriteCount={favorites.length} />
 
-      {/* 구분 탭 */}
-      <div className="flex border-b-[1.5px] border-gray-200 mt-5 mb-5">
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex-1 pb-2.5 pt-1.5 text-sm font-semibold relative transition-colors ${
-              tab === t.key ? 'text-primary-500' : 'text-gray-400'
-            }`}
-          >
-            {t.label}
-            {tab === t.key && (
-              <span className="absolute left-0 right-0 -bottom-[1.5px] h-[2.5px] bg-primary-500 rounded-full" />
-            )}
-          </button>
-        ))}
+      <MenuGroup title="내 여행">
+        <MenuItem to="/my/courses" icon="🧭" label="내 코스" desc="직접 만든 여행 코스" count={courses.length} />
+        <MenuItem to="/my/stamps" icon="🗺️" label="스탬프 컬렉션" desc="방문 인증한 관광지" count={stamps.length} />
+        <MenuItem to="/my/favorites" icon="🧡" label="관심 목록" desc="저장한 행사·축제" count={favorites.length} />
+      </MenuGroup>
+
+      <MenuGroup title="설정">
+        <MenuItem to="/settings" icon="👤" label="계정 설정" plain />
+        <MenuItem to="/terms" icon="📄" label="이용약관" plain />
+        <MenuItem to="/privacy" icon="🔒" label="개인정보처리방침" plain />
+      </MenuGroup>
+
+      <div className="mt-7 text-center text-[10.5px] text-gray-400 leading-relaxed">
+        <span className="font-semibold text-gray-500">스탬프여행</span> v{__APP_VERSION__}
+        <br />관광 정보 · 한국관광공사 TourAPI
+        <br />지도 · 카카오맵
       </div>
-
-      {tab === 'stamp' ? (
-        <div className="px-4">
-          {stamps.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <p className="text-6xl mb-5">🗺️</p>
-              <p className="text-gray-600 font-medium">여행을 시작해보세요!</p>
-              <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-                지도 탭에서 관광지 반경 {STAMP_RADIUS}m 내에<br />들어가면 스탬프를 찍을 수 있습니다
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* 스탬프 그리드 */}
-              <section className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-bold text-gray-700">스탬프 컬렉션</h2>
-                  <button
-                    onClick={handleClear}
-                    className="text-[11px] text-red-400 border border-red-200 px-2.5 py-1 rounded-full"
-                  >
-                    초기화
-                  </button>
-                </div>
-                <div className="grid grid-cols-3 gap-x-2 gap-y-5">
-                  {stamps.map(spot => (
-                    <div key={spot.contentId} className="flex flex-col items-center gap-1">
-                      <StampBadge
-                        spot={{ title: spot.title, firstimage: spot.firstimage }}
-                        stamped
-                        size="md"
-                      />
-                      <button
-                        onClick={() => unstamp(spot.contentId)}
-                        className="text-[10px] text-gray-300 underline underline-offset-2"
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* 방문 타임라인 */}
-              <section>
-                <h2 className="text-sm font-bold text-gray-700 mb-3">방문 기록</h2>
-                <div className="flex flex-col gap-2.5">
-                  {[...stamps].reverse().map(spot => (
-                    <div
-                      key={spot.contentId}
-                      className="flex gap-3 items-center bg-white rounded-xl p-3.5 shadow-sm border border-gray-100"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-xl flex-shrink-0">
-                        📍
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-gray-800 line-clamp-1">{spot.title}</p>
-                        {spot.addr1 && (
-                          <p className="text-xs text-gray-500 line-clamp-1">{spot.addr1}</p>
-                        )}
-                        <p className="text-xs text-primary-400 mt-0.5">
-                          {new Date(spot.stampedAt).toLocaleDateString('ko-KR', {
-                            year: 'numeric', month: 'long', day: 'numeric',
-                          })}
-                        </p>
-                      </div>
-                      <span className="text-xs bg-primary-50 text-primary-500 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
-                        ✓
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="px-4">
-          {favorites.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <p className="text-6xl mb-5">🧡</p>
-              <p className="text-gray-600 font-medium">아직 관심 목록이 없습니다</p>
-              <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-                코스 탭에서 하트를 눌러<br />행사를 저장해 보세요
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                {pagedFavorites.map(item => (
-                  <BenefitCard
-                    key={item.contentid}
-                    benefit={item}
-                    onClick={() =>
-                      isEnded(item) ? setEndedItem(item) : openDetail(item.contentid)
-                    }
-                  />
-                ))}
-              </div>
-              <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={handlePageChange} />
-            </>
-          )}
-        </div>
-      )}
-
-      {selectedId && (
-        <DetailModal contentId={selectedId} onClose={closeDetail} />
-      )}
-
-      {endedItem && (
-        <EndedFestivalModal
-          item={endedItem}
-          onRemove={() => {
-            toggleFavorite(endedItem)
-            showToast('관심 목록에서 해제했습니다')
-            setEndedItem(null)
-          }}
-          onClose={() => setEndedItem(null)}
-        />
-      )}
     </div>
+  )
+}
+
+function MenuGroup({ title, children }) {
+  return (
+    <section className="mx-4 mt-4 bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <p className="px-4 pt-3 pb-1 text-[11px] font-bold text-gray-400 tracking-wide">{title}</p>
+      {children}
+    </section>
+  )
+}
+
+function MenuItem({ to, icon, label, desc, count, plain = false }) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-3 px-4 py-3 border-t border-gray-100 first-of-type:border-t-0 active:bg-gray-50"
+    >
+      <span className={`w-8 h-8 rounded-[10px] flex items-center justify-center text-[15px] flex-shrink-0 ${plain ? 'bg-gray-100' : 'bg-primary-50'}`}>
+        {icon}
+      </span>
+      <span className="flex-1 min-w-0">
+        <span className="block text-sm font-semibold text-gray-900">{label}</span>
+        {desc && <span className="block text-[11px] text-gray-400 mt-px">{desc}</span>}
+      </span>
+      {count !== undefined && <span className="text-xs text-gray-500 tabular-nums">{count}</span>}
+      <span className="text-gray-300 text-base">›</span>
+    </Link>
   )
 }
