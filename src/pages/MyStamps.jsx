@@ -1,16 +1,21 @@
+import { useState } from 'react'
 import useStamp from '../hooks/useStamp'
 import StampBadge from '../components/StampBadge'
 import SubHeader from '../components/SubHeader'
+import ConfirmModal from '../components/ConfirmModal'
+import { useToast } from '../components/Toast'
 import { STAMP_RADIUS } from './Map'
 
 /** My 탭 › 스탬프 컬렉션: 스탬프 그리드 + 방문 기록 타임라인 */
 export default function MyStamps() {
   const { stamps, unstamp, clear } = useStamp()
+  const showToast = useToast()
+  const [confirmClear, setConfirmClear] = useState(false)
 
   function handleClear() {
-    if (window.confirm('모든 스탬프를 삭제할까요? 되돌릴 수 없습니다.')) {
-      clear()
-    }
+    setConfirmClear(false)
+    clear()
+    showToast('스탬프를 모두 삭제했어요')
   }
 
   return (
@@ -21,7 +26,7 @@ export default function MyStamps() {
         fallback="/archive"
         right={stamps.length > 0 && (
           <button
-            onClick={handleClear}
+            onClick={() => setConfirmClear(true)}
             className="text-[11px] text-red-400 border border-red-200 px-2.5 py-1 rounded-full"
           >
             초기화
@@ -92,6 +97,17 @@ export default function MyStamps() {
           </>
         )}
       </div>
+
+      {confirmClear && (
+        <ConfirmModal
+          title="모든 스탬프를 삭제할까요?"
+          message="되돌릴 수 없습니다."
+          confirmLabel="모두 삭제"
+          danger
+          onConfirm={handleClear}
+          onClose={() => setConfirmClear(false)}
+        />
+      )}
     </div>
   )
 }

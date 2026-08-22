@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import useCourse from '../hooks/useCourse'
 import useStamp from '../hooks/useStamp'
 import { useToast } from '../components/Toast'
+import ConfirmModal from '../components/ConfirmModal'
 import CourseMap from '../components/CourseMap'
 import SubHeader from '../components/SubHeader'
 import { courseDistance, formatCourseTotal } from '../components/CourseSheet'
@@ -15,6 +16,7 @@ export default function CourseDetail() {
   const showToast = useToast()
   const { courses, deleteCourse } = useCourse()
   const { isStamped } = useStamp()
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const course = courses.find(c => String(c.id) === id)
   const allIds = useMemo(() => course?.spots.map(s => s.contentid) ?? [], [course])
@@ -49,7 +51,7 @@ export default function CourseDetail() {
   }
 
   function handleDelete() {
-    if (!window.confirm('이 코스를 삭제할까요? 찍은 스탬프는 그대로 남아요.')) return
+    setConfirmDelete(false)
     deleteCourse(course.id)
     showToast('코스를 삭제했어요')
     navigate('/my/courses', { replace: true })
@@ -62,7 +64,7 @@ export default function CourseDetail() {
         subtitle={`${formatCourseDate(course.createdAt)} 만듦 · ${total}곳 · ${formatCourseTotal(courseDistance(course.event, course.spots))}`}
         fallback="/my/courses"
         right={
-          <button onClick={handleDelete} className="text-[11px] text-red-400 border border-red-200 px-2.5 py-1 rounded-full flex-shrink-0">
+          <button onClick={() => setConfirmDelete(true)} className="text-[11px] text-red-400 border border-red-200 px-2.5 py-1 rounded-full flex-shrink-0">
             삭제
           </button>
         }
@@ -138,6 +140,17 @@ export default function CourseDetail() {
           )
         })}
       </div>
+
+      {confirmDelete && (
+        <ConfirmModal
+          title="이 코스를 삭제할까요?"
+          message="찍은 스탬프는 그대로 남아요."
+          confirmLabel="삭제하기"
+          danger
+          onConfirm={handleDelete}
+          onClose={() => setConfirmDelete(false)}
+        />
+      )}
     </div>
   )
 }

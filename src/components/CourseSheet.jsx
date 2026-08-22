@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { calcDistance } from '../api/kakaoMap'
 
 export const COURSE_NAME_MAX = 30
 const WALK_M_PER_MIN = 67 // 약 4km/h
+const DRAG_CLOSE_PX = 90 // 이만큼 이상 끌어내리면 닫힘
 
 /** ★ 행사 → 스팟 순서대로 이어지는 도보 거리 합 (m) */
 export function courseDistance(event, spots) {
@@ -27,6 +28,24 @@ export function formatCourseTotal(totalM) {
 export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
   const [name, setName] = useState(`${event.title} 코스`)
   const [order, setOrder] = useState(spots)
+  // 손잡이 영역을 아래로 끌어 내리면 닫힌다 (모바일). dragY 는 현재 끌어내린 거리(px)
+  const [dragY, setDragY] = useState(0)
+  const dragStartRef = useRef(null)
+
+  function onDragStart(e) {
+    if (saving) return
+    dragStartRef.current = e.touches[0].clientY
+  }
+  function onDragMove(e) {
+    if (dragStartRef.current === null) return
+    setDragY(Math.max(0, e.touches[0].clientY - dragStartRef.current))
+  }
+  function onDragEnd() {
+    if (dragStartRef.current === null) return
+    dragStartRef.current = null
+    if (dragY > DRAG_CLOSE_PX) onClose()
+    else setDragY(0)
+  }
 
   const trimmed = name.trim()
   const nameError = trimmed.length === 0 ? '코스 이름을 입력해 주세요' : null
@@ -47,12 +66,24 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
     <div className="fixed inset-0 z-[60] flex items-end justify-center" onClick={saving ? undefined : onClose}>
       <div className="absolute inset-0 bg-black/45" />
       <div
-        className="relative w-full max-w-md max-h-[78vh] overflow-y-auto bg-white rounded-t-3xl shadow-2xl px-4 pt-2.5 pb-6 animate-[slideUp_0.25s_ease-out]"
+        className={`relative w-full max-w-md max-h-[78vh] overflow-y-auto bg-white rounded-t-3xl shadow-2xl px-4 pb-6 animate-[slideUp_0.25s_ease-out] ${
+          dragStartRef.current === null ? 'transition-transform duration-200' : ''
+        }`}
+        style={{ transform: `translateY(${dragY}px)` }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-3.5" />
-        <h2 className="text-lg font-extrabold text-gray-900">나만의 코스</h2>
-        <p className="text-xs text-gray-500 mt-1">순서는 선택한 순서예요 · 화살표로 바꿀 수 있어요</p>
+        {/* 손잡이 + 제목: 이 영역을 끌어내리면 시트가 닫힌다 */}
+        <div
+          className="pt-2.5 touch-none select-none"
+          onTouchStart={onDragStart}
+          onTouchMove={onDragMove}
+          onTouchEnd={onDragEnd}
+          onTouchCancel={onDragEnd}
+        >
+          <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-3.5" />
+          <h2 className="text-lg font-extrabold text-gray-900">나만의 코스</h2>
+          <p className="text-xs text-gray-500 mt-1">순서는 선택한 순서예요 · 화살표로 바꿀 수 있어요</p>
+        </div>
 
         <div className="relative mt-3.5">
           <input
@@ -110,7 +141,7 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
             disabled={saving}
             className="px-5 py-3 rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-700"
           >
-            더 고르기
+            취소
           </button>
           <button
             type="button"

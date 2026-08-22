@@ -177,11 +177,8 @@ export default function NearbySpots() {
       {/* 하단 고정 바 (탭바 바로 위) */}
       {!loading && spots.length > 0 && (
         <div className="fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-md z-40 px-4 py-3 bg-gray-50/90 backdrop-blur border-t border-gray-200 flex items-center gap-3">
-          <div className="flex-1 min-w-0 text-[13px] text-gray-700 leading-snug">
+          <div className="flex-1 min-w-0 text-[13px] text-gray-700">
             <span className="font-extrabold text-primary-600">{selected.length}곳</span> 선택됨
-            <p className="text-[11px] text-gray-400 truncate">
-              {selectedSpots.length ? selectedSpots.map(s => s.title).join(' → ') : '가고 싶은 곳을 골라주세요'}
-            </p>
           </div>
           <button
             onClick={() => setSheetOpen(true)}
