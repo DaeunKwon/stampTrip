@@ -44,6 +44,21 @@ export function getFestivalList({ eventStartDate, areaCode, pageNo = 1, numOfRow
   return fetchApi('/searchFestival2', { eventStartDate, areaCode, pageNo, numOfRows, arrange });
 }
 
+/**
+ * 오늘 이후 진행 중이거나 시작하는 전국 행사/축제.
+ * 종료 예정일(eventenddate)이 임박한 순, 종료일이 같으면 시작일이 빠른 순으로 정렬해 돌려준다.
+ * 홈 "진행중인 행사/축제" 와 코스 탭이 같은 목록을 쓰도록 여기서 한 번만 정의한다.
+ * searchFestival2 는 응답의 areacode 가 항상 빈 값이라 지역 필터는 호출 쪽에서 addr1 로 직접 건다.
+ */
+export async function getOngoingFestivals({ numOfRows = 200 } = {}) {
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const items = await getFestivalList({ eventStartDate: today, numOfRows, arrange: 'C' });
+  return [...items].sort((a, b) =>
+    (a.eventenddate ?? '').localeCompare(b.eventenddate ?? '') ||
+    (a.eventstartdate ?? '').localeCompare(b.eventstartdate ?? '')
+  );
+}
+
 export async function getDetailCommon(contentId) {
   const items = await fetchApi('/detailCommon2', { contentId });
   return items[0] ?? null;

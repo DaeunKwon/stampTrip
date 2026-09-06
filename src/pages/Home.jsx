@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import BenefitCard from '../components/BenefitCard'
 import CourseCard from '../components/CourseCard'
 import DetailModal from '../components/DetailModal'
-import { getAreaBasedList } from '../api/tourApi'
+import { getOngoingFestivals } from '../api/tourApi'
 import { MOCK_COURSES } from '../data/courses'
 
 function SkeletonCard() {
@@ -29,8 +29,9 @@ export default function Home() {
   }
 
   useEffect(() => {
-    getAreaBasedList({ contentTypeId: '15', numOfRows: 4, arrange: 'C' })
-      .then(items => setEvents(items))
+    // 코스 탭과 같은 목록(진행 중, 종료 임박 순)의 상위 4개 → "전체보기" 로 넘어가도 순서가 이어진다
+    getOngoingFestivals()
+      .then(items => setEvents(items.slice(0, 4)))
       .catch(() => setEvents([]))
       .finally(() => setLoading(false))
   }, [])

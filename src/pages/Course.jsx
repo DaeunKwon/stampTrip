@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import BenefitCard from '../components/BenefitCard'
 import DetailModal from '../components/DetailModal'
 import Pagination from '../components/Pagination'
-import { getFestivalList } from '../api/tourApi'
+import { getOngoingFestivals } from '../api/tourApi'
 
 const ITEMS_PER_PAGE = 6
 
@@ -48,21 +48,11 @@ export default function Course() {
 
   useEffect(() => {
     setLoading(true)
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-    // searchFestival2는 응답의 areacode 필드가 항상 빈 값이라 서버 areaCode 필터가 0건만 반환한다.
-    // 전국 데이터를 받아 addr1 접두어로 지역을 직접 걸러낸다.
-    getFestivalList({ eventStartDate: today, numOfRows: 200, arrange: 'C' })
+    // 전국 데이터(종료 임박 순 정렬)를 받아 addr1 접두어로 지역을 직접 걸러낸다
+    getOngoingFestivals()
       .then(items => {
         const areaLabel = AREA_CODES.find(a => a.code === areaCode)?.label
-        const filtered = areaCode
-          ? items.filter(item => item.addr1?.startsWith(areaLabel))
-          : items
-        // 종료 예정일(eventenddate)이 임박한 순, 종료일이 같으면 시작일이 빠른 순으로 정렬
-        const sorted = [...filtered].sort((a, b) =>
-          (a.eventenddate ?? '').localeCompare(b.eventenddate ?? '') ||
-          (a.eventstartdate ?? '').localeCompare(b.eventstartdate ?? '')
-        )
-        setItems(sorted)
+        setItems(areaCode ? items.filter(item => item.addr1?.startsWith(areaLabel)) : items)
       })
       .catch(() => setItems([]))
       .finally(() => setLoading(false))
