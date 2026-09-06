@@ -1,20 +1,19 @@
 import { useEffect } from 'react'
+import useBodyScrollLock from '../hooks/useBodyScrollLock'
 
 /**
  * 관심 목록에서 기간이 종료된 행사를 클릭했을 때 뜨는 안내 팝업.
  * 그 자리에서 관심 해제까지 유도한다 (B안 목업 확정).
  */
 export default function EndedFestivalModal({ item, onRemove, onClose }) {
-  // ESC 닫기 + 배경 스크롤 방지 (DetailModal과 동일 패턴)
+  // 배경 스크롤 방지 (iOS 포함)
+  useBodyScrollLock()
+
+  // ESC 닫기
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
-    }
+    return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { calcDistance } from '../api/kakaoMap'
+import useBodyScrollLock from '../hooks/useBodyScrollLock'
 
 export const COURSE_NAME_MAX = 30
 const WALK_M_PER_MIN = 67 // 약 4km/h
@@ -55,12 +56,8 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
   // 실제로 보이는 영역(visualViewport). 모바일 키패드가 뜨면 이 값이 줄어든다
   const [viewport, setViewport] = useState(() => readViewport(null))
 
-  // 시트가 떠 있는 동안 뒤 페이지 스크롤 잠금 (DetailModal 과 동일)
-  useEffect(() => {
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prevOverflow }
-  }, [])
+  // 시트가 떠 있는 동안 뒤 페이지 스크롤 잠금 (iOS 포함)
+  useBodyScrollLock()
 
   // 키패드가 뜨거나 내려갈 때 보이는 영역 크기에 맞춰 오버레이를 다시 맞춘다
   useEffect(() => {

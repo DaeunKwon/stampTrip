@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDetailCommon, getDetailIntro } from '../api/tourApi'
 import useFavorite from '../hooks/useFavorite'
+import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { useToast } from './Toast'
 
 // HTML 태그/엔티티 정리 (<br> → 줄바꿈, 나머지 태그 제거, 엔티티 디코드)
@@ -59,16 +60,14 @@ export default function DetailModal({ contentId, onClose }) {
     onClose()
   }
 
-  // ESC 닫기 + 배경 스크롤 방지
+  // 배경 스크롤 방지 (iOS 포함)
+  useBodyScrollLock()
+
+  // ESC 닫기
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && !loading && onClose()
     document.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
-    }
+    return () => document.removeEventListener('keydown', onKey)
   }, [onClose, loading])
 
   const homepage = detail?.homepage ? cleanHtml(detail.homepage) : ''
