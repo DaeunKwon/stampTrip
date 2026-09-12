@@ -99,3 +99,32 @@ $$;
 
 revoke all on function public.delete_my_account() from public;
 grant execute on function public.delete_my_account() to authenticated;
+
+-- ─────────────────────────────────────────────
+-- 6. 요즘 뜨는 명소 (scripts/trending-snapshot.mjs 가 매일 06:00 KST 에 채움)
+--    spot_forecast_daily : 관광지별 당일 집중률 예보를 매일 쌓아 "평소" 기준으로 쓴다 (8주치만 보관)
+--    trending_daily      : 그날의 결과 목록. 홈 화면은 최신 행 하나만 읽는다
+--    items: [{ rank, name, areaNm, signguNm, score, contentId, title, addr1, firstimage, description, ... }]
+-- ─────────────────────────────────────────────
+create table if not exists public.spot_forecast_daily (
+  base_date   text not null,          -- YYYYMMDD
+  spot_key    text not null,          -- 시군구코드|관광지명
+  signgu_cd   text not null,
+  spot_name   text not null,
+  rate        numeric(5,2) not null,  -- 집중률 0~100
+  primary key (base_date, spot_key)
+);
+create index if not exists spot_forecast_daily_date_idx on public.spot_forecast_daily(base_date);
+
+create table if not exists public.trending_daily (
+  date          text primary key,     -- YYYYMMDD
+  items         jsonb not null default '[]'::jsonb,
+  generated_at  timestamptz not null default now()
+);
+
+alter table public.spot_forecast_daily enable row level security;   -- 배치(service role)만 접근, 공개 정책 없음
+alter table public.trending_daily      enable row level security;
+
+drop policy if exists "trending_daily: public read" on public.trending_daily;
+create policy "trending_daily: public read" on public.trending_daily
+  for select using (true);

@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import BenefitCard from '../components/BenefitCard'
-import CourseCard from '../components/CourseCard'
 import DetailModal from '../components/DetailModal'
+import TrendingSection from '../components/TrendingSection'
 import { getOngoingFestivals } from '../api/tourApi'
-import { MOCK_COURSES } from '../data/courses'
 
 function SkeletonCard() {
   return <div className="bg-gray-100 rounded-2xl h-48 animate-pulse" />
@@ -73,17 +72,8 @@ export default function Home() {
         )}
       </section>
 
-      {/* 추천 코스 섹션 */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-gray-800">추천 코스</h2>
-        </div>
-        <div className="flex flex-col gap-3">
-          {MOCK_COURSES.slice(0, 2).map(course => (
-            <CourseCard key={course.id} course={course} />
-          ))}
-        </div>
-      </section>
+      {/* 요즘 뜨는 명소 — 행사 카드와 같은 상세 팝업으로 연결 */}
+      <TrendingSection onSelect={openDetail} />
 
       {selectedId && (
         <DetailModal contentId={selectedId} onClose={closeDetail} />

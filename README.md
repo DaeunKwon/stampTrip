@@ -147,6 +147,33 @@ npm run preview  # 빌드 결과 미리보기
 
 ---
 
+## 요즘 뜨는 명소 (홈 두 번째 섹션) 배치 설정
+
+홈의 "요즘 뜨는 명소"는 앱이 직접 API를 부르지 않고, 매일 한 번 돌아가는 배치가 Supabase에 저장한 결과를 읽습니다.
+
+- 데이터: 한국관광공사 **관광지 집중률 방문자 추이 예측 정보** (`TatsCnctrRateService`, KT 통신 데이터 기반 30일 예보). 기존 TourAPI 키로 바로 호출됩니다.
+- 로직: 시군구 252곳 전부 받아 **이번 주 예보 평균 ÷ 평소 평균**이 높은 순, 시군구당 1곳, 관광지명으로 국문 관광정보를 검색해 사진·상세 연결이 된 곳만 저장. "평소"는 매일 쌓이는 스냅샷(8주 보관)으로 계산하며, 2주치가 쌓이기 전에는 30일 예보 평균으로 대신합니다.
+- 코드: [`scripts/trending-snapshot.mjs`](scripts/trending-snapshot.mjs), 워크플로 [`.github/workflows/trending-snapshot.yml`](.github/workflows/trending-snapshot.yml) (매일 06:00 KST, 수동 실행 가능)
+
+설정은 세 단계입니다.
+
+1. Supabase → SQL Editor 에서 `supabase/schema.sql` 을 다시 실행 (`spot_forecast_daily`, `trending_daily` 테이블 추가)
+2. GitHub 저장소 → Settings → Secrets and variables → Actions 에 등록:
+   | 이름 | 값 |
+   |---|---|
+   | `TOUR_API_KEY` | `.env`의 `VITE_TOUR_API_KEY` 와 같은 값 |
+   | `SUPABASE_URL` | Supabase Project URL |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → `service_role` 키 (**클라이언트 `.env`에 넣지 마세요**) |
+3. Actions 탭 → "요즘 뜨는 명소 스냅샷" → **Run workflow** 로 첫 실행. 이후 매일 자동으로 돌고, 홈에 섹션이 나타납니다.
+
+로컬에서 결과만 확인하려면 (Supabase 에 쓰지 않음):
+
+```bash
+npm run trending:dry -- --limit 10   # 시군구 10곳만
+```
+
+---
+
 ## API 키 발급 방법
 
 ### 한국관광공사 TourAPI
