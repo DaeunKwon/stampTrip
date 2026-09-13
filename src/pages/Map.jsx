@@ -199,7 +199,8 @@ export default function Map() {
   }, [])
 
   const handleStamp = useCallback(() => {
-    if (!displaySpot || !isDisplaySpotActive || isDisplaySpotStamped) return
+    // 도장 연출이 진행 중이면 다음 인증을 받지 않는다 (연출이 겹치면 두 번째 애니메이션이 뜨지 않음)
+    if (ceremony || !displaySpot || !isDisplaySpotActive || isDisplaySpotStamped) return
     stamp({
       contentId: displaySpot.contentid,
       title: displaySpot.title,
@@ -207,7 +208,7 @@ export default function Map() {
       firstimage: displaySpot.firstimage ?? '',
     })
     setCeremony({ title: displaySpot.title, count: stamps.length + 1 })
-  }, [displaySpot, isDisplaySpotActive, isDisplaySpotStamped, stamp, stamps.length])
+  }, [ceremony, displaySpot, isDisplaySpotActive, isDisplaySpotStamped, stamp, stamps.length])
 
   // 인장 착지 순간 지도 화면을 미세하게 흔든다
   const handleStampImpact = useCallback(() => {
@@ -290,7 +291,8 @@ export default function Map() {
         </button>
       )}
 
-      {/* 스탬프 패널 */}
+      {/* 스탬프 패널 — 도장 연출이 끝날 때까지는 숨겨서 연출 중 다음 관광지 인증을 막는다 */}
+      {!ceremony && (
       <div className="absolute bottom-3 left-3 right-3 z-10">
         {displaySpot ? (
           <div className="relative bg-white rounded-2xl shadow-xl px-4 py-4">
@@ -342,6 +344,7 @@ export default function Map() {
           </div>
         )}
       </div>
+      )}
 
       {/* 방문 인증 도장 연출 */}
       {ceremony && (
