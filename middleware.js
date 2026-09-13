@@ -1,5 +1,6 @@
 export const config = {
-  matcher: '/:path*',
+  // /api/* 는 Vercel Cron 이 부르는 서버 함수라 Basic Auth 대상에서 뺀다 (자체 CRON_SECRET 으로 인증)
+  matcher: '/((?!api/).*)',
 }
 
 export default function middleware(request) {

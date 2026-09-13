@@ -153,26 +153,29 @@ npm run preview  # 빌드 결과 미리보기
 
 - 데이터: 한국관광공사 **관광지 집중률 방문자 추이 예측 정보** (`TatsCnctrRateService`, KT 통신 데이터 기반 30일 예보). 기존 TourAPI 키로 바로 호출됩니다.
 - 로직: 시군구 252곳 전부 받아 **이번 주 예보 평균 ÷ 평소 평균**이 높은 순, 시군구당 1곳, 관광지명으로 국문 관광정보를 검색해 사진·상세 연결이 된 곳만 저장. "평소"는 매일 쌓이는 스냅샷(8주 보관)으로 계산하며, 2주치가 쌓이기 전에는 30일 예보 평균으로 대신합니다.
-- 코드: [`scripts/trending-snapshot.mjs`](scripts/trending-snapshot.mjs), 워크플로 [`.github/workflows/trending-snapshot.yml`](.github/workflows/trending-snapshot.yml) (매일 06:00 KST, 수동 실행 가능)
+- 코드: [`scripts/trending-snapshot.mjs`](scripts/trending-snapshot.mjs) (로직) · [`api/trending-snapshot.js`](api/trending-snapshot.js) (Vercel 함수) · `vercel.json` 의 `crons` (매일 06:00 KST)
+- 실행 위치: **Vercel 서울 리전(icn1)**. 공공데이터포털 API가 해외 IP를 차단해서 GitHub Actions(미국)에서는 `fetch failed`로 실패합니다. `vercel.json` 의 `regions` 를 바꾸지 마세요.
 
 설정은 세 단계입니다.
 
 1. Supabase → SQL Editor 에서 `supabase/schema.sql` 을 다시 실행 (`spot_forecast_daily`, `trending_daily` 테이블 추가)
-2. GitHub 저장소 → Settings → Secrets and variables → Actions 에 등록:
+2. Vercel 프로젝트 → Settings → Environment Variables 에 **두 개만** 추가 (Production 체크). 이미 있는 `VITE_TOUR_API_KEY`, `VITE_SUPABASE_URL` 은 함수가 그대로 읽습니다:
    | 이름 | 값 |
    |---|---|
-   | `TOUR_API_KEY` | `.env`의 `VITE_TOUR_API_KEY` 와 같은 값 |
-   | `SUPABASE_URL` | Supabase Project URL |
-   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → `service_role` 키 (**클라이언트 `.env`에 넣지 마세요**) |
-3. Actions 탭 → "요즘 뜨는 명소 스냅샷" → **Run workflow** 로 첫 실행. 이후 매일 자동으로 돌고, 홈에 섹션이 나타납니다.
+   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → `service_role` 키. 서버 전용 값이므로 **`VITE_` 를 붙이지 마세요** (붙이면 브라우저에 노출됩니다) |
+   | `CRON_SECRET` | 아무 긴 무작위 문자열 (16자 이상, 예: `openssl rand -hex 24`). Vercel Cron 이 이 값을 Authorization 헤더로 보내고, 함수가 대조합니다 |
+3. 재배포 후 Vercel → 프로젝트 → Settings → Cron Jobs 에 `/api/trending-snapshot` 이 보이면 완료. 첫 실행은 기다리지 말고 아래처럼 수동으로 한 번 돌려 홈에 섹션이 뜨는지 확인하세요.
+
+```bash
+curl -H "Authorization: Bearer <CRON_SECRET>" "https://<배포도메인>/api/trending-snapshot"
+# 응답 JSON 의 ok / items / logs 로 결과 확인. ?limit=10 (시군구 10곳만) ?dry=1 (저장 안 함) 도 됩니다
+```
 
 로컬에서 결과만 확인하려면 (Supabase 에 쓰지 않음):
 
 ```bash
 npm run trending:dry -- --limit 10   # 시군구 10곳만
 ```
-
----
 
 ## API 키 발급 방법
 
