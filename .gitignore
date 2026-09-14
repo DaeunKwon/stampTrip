@@ -3,3 +3,8 @@ node_modules
 dist
 .vercel
 docs
+font
+
+dist-e2e
+e2e-results
+.DS_Store
