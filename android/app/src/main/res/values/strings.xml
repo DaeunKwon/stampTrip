@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">스탬프여행</string>
+    <string name="title_activity_main">스탬프여행</string>
+    <string name="package_name">kr.stamptrip.app</string>
+    <string name="custom_url_scheme">kr.stamptrip.app</string>
+</resources>

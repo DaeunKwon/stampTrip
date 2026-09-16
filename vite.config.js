@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => ({
     // 테스트(vitest)에서는 서비스워커 생성이 필요 없어 PWA 플러그인을 뺀다
     ...(mode === 'test' ? [] : [VitePWA({
       registerType: 'autoUpdate',
+      // 등록은 src/main.jsx 에서 직접 (네이티브 앱에서는 건너뛰기 위해)
+      injectRegister: null,
       includeAssets: ['icons/apple-touch-icon.png'],
       manifest: {
         name: '스탬프여행',

@@ -8,3 +8,8 @@ font
 dist-e2e
 e2e-results
 .DS_Store
+
+# Capacitor 네이티브 빌드 산출물 (android/.gitignore 가 대부분 처리, local.properties 는 개인 SDK 경로)
+android/local.properties
+android/app/release/
+ios/App/App/public

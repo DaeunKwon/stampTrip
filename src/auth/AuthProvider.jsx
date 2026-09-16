@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase, isSupabaseConfigured } from '../api/supabase'
+import { isNativeApp } from '../native/platform'
+import { openNativeOAuth, listenAuthDeepLink } from '../native/auth'
 
 const AuthContext = createContext(null)
 
@@ -73,13 +75,23 @@ export function AuthProvider({ children }) {
       }
     })
 
+    // 네이티브 앱: 시스템 브라우저 인증 후 딥링크로 돌아온 토큰을 세션으로 (onAuthStateChange 가 이어받는다)
+    const stopDeepLink = isNativeApp
+      ? listenAuthDeepLink(supabase, r => { if (!cancelled && r.error) setInitError(r.error) })
+      : () => {}
+
     return () => {
       cancelled = true
       subscription.unsubscribe()
+      stopDeepLink()
     }
   }, [loadProfile])
 
   const signInWith = useCallback(async provider => {
+    if (isNativeApp) {
+      await openNativeOAuth(supabase, provider)
+      return
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {

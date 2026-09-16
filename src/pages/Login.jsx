@@ -5,6 +5,7 @@ import { useToast } from '../components/Toast'
 import BrandMark from '../components/BrandMark'
 import Splash from '../components/Splash'
 import { ProviderIcon } from '../components/Provider'
+import { isNativeApp } from '../native/platform'
 
 const PROVIDERS = [
   { key: 'kakao',  label: '카카오로 시작하기', pending: '카카오 로그인 중…' },
@@ -16,6 +17,16 @@ export default function Login() {
   const showToast = useToast()
   const location = useLocation()
   const [pending, setPending] = useState(null) // 'kakao' | 'google' | null
+
+  // 네이티브 앱: 시스템 브라우저 인증 시트가 닫히면(완료 또는 사용자가 취소) 버튼 상태를 되돌린다
+  useEffect(() => {
+    if (!isNativeApp) return
+    let handle
+    import('@capacitor/browser').then(({ Browser }) => {
+      handle = Browser.addListener('browserFinished', () => setPending(null))
+    })
+    return () => { handle?.then(h => h.remove()) }
+  }, [])
 
   // 소셜 인증 후 앱으로 돌아왔을 때 URL(해시 또는 쿼리)에 error 가 실려오면 안내
   useEffect(() => {
