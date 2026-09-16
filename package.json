@@ -20,6 +20,7 @@
     "android:build": "npm run cap:sync && cd android && ./gradlew assembleDebug -q",
     "android:run": "npm run cap:sync && cap run android",
     "android:open": "cap open android",
+    "android:release": "bash scripts/android-release.sh",
     "ios:open": "cap open ios",
     "assets": "capacitor-assets generate --iconBackgroundColor #ffffff --iconBackgroundColorDark #1f2937 --splashBackgroundColor #ffffff --splashBackgroundColorDark #111827"
   },

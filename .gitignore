@@ -13,3 +13,7 @@ e2e-results
 android/local.properties
 android/app/release/
 ios/App/App/public
+
+# 릴리스 서명 키 (원스토어 업로드용) — 절대 커밋 금지, 별도 백업
+android/keystore/
+android/keystore.properties

@@ -134,6 +134,24 @@ npm run test:e2e:web    # 프로젝트 하나만
 
 E2E 는 실제 API 키 없이 동작합니다(네트워크 전부 가로챔). 구조 · 실기기 수동 체크리스트는 [tests/README.md](tests/README.md) 참고.
 
+### 7. Android 앱 빌드 (Capacitor · 원스토어 업로드용)
+
+Android Studio(+SDK)와 **JDK 17~21** 이 필요합니다. Android Studio 내장 JDK 는 25 라 Gradle 8.14 가 거부하므로, 스크립트가 `~/.jdks/jdk-21*` 을 자동으로 찾습니다(없으면 안내 메시지대로 Temurin 21 을 내려받아 두세요).
+
+```bash
+npm run android:build     # 디버그 APK (android/app/build/outputs/apk/debug/)
+npm run android:release   # 서명된 릴리스 APK → android/app/release/stamptrip-<버전>-release.apk
+```
+
+릴리스 서명 키는 `android/keystore/stamptrip-release.jks` + `android/keystore.properties` 에 있으며 **둘 다 gitignore** 입니다. 잃어버리면 같은 앱으로 업데이트를 올릴 수 없으니 반드시 별도 백업하세요. 새 키를 만들려면:
+
+```bash
+keytool -genkeypair -keystore android/keystore/stamptrip-release.jks -alias stamptrip -keyalg RSA -keysize 2048 -validity 10000
+# android/keystore.properties: storeFile=keystore/stamptrip-release.jks / storePassword / keyAlias=stamptrip / keyPassword
+```
+
+버전을 올릴 때는 `android/app/build.gradle` 의 `versionCode`(정수, 매번 +1) 와 `versionName` 을 수정합니다.
+
 ---
 
 ## 배포 & 테스터에게 공유하기 (Vercel)
