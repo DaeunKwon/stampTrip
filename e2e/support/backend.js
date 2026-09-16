@@ -58,7 +58,7 @@ function parseFilters(sp) {
   return { filters, order, limit }
 }
 
-function restHandler(db, url, req) {
+export function restHandler(db, url, req) {
   const table = url.pathname.replace('/rest/v1/', '')
   const { filters, order, limit } = parseFilters(url.searchParams)
   const method = req.method()

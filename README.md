@@ -152,7 +152,25 @@ keytool -genkeypair -keystore android/keystore/stamptrip-release.jks -alias stam
 
 버전을 올릴 때는 `android/app/build.gradle` 의 `versionCode`(정수, 매번 +1) 와 `versionName` 을 수정합니다.
 
+> ⚠️ 앱 안의 WebView 는 `https://localhost` 출처로 카카오맵 SDK 를 부릅니다. 카카오 개발자 콘솔 → 앱 → 플랫폼 키 → JavaScript 키 이름 클릭 → JavaScript SDK 도메인에 `https://localhost` 를 추가하지 않으면 앱의 지도 탭이 `domain mismatched` 로 비어 있습니다(서버 쪽 검사라 APK 재빌드는 불필요).
+
+스토어 등록 자료(소개글 · 스크린샷 · 아이콘)는 `store/` 에 있습니다. 스크린샷은 dev 서버(5173)가 떠 있는 상태에서 `npm run store:shots` 로 다시 만듭니다.
+
 ---
+
+## iOS 앱 (TestFlight)
+
+Capacitor 로 감싼 iOS 프로젝트는 `ios/` 에 있습니다(CocoaPods 대신 Swift Package Manager).
+Xcode · Apple Developer Program · App Store Connect 앱 생성 · Xcode 에서 Team 한 번 선택까지 끝나면 아래 한 줄로 TestFlight 에 올라갑니다.
+
+```bash
+npm run ios:open          # Xcode 로 열기 (처음 한 번: Signing & Capabilities 에서 Team 선택)
+npm run ios:testflight    # 웹 빌드 → cap sync → Release 아카이브 → App Store Connect 업로드
+BUILD=2 npm run ios:testflight   # 재업로드 시 빌드번호 지정
+```
+
+전체 절차(계정 가입 · 앱 생성 · 심사자 초대)는 [`store/testflight.md`](store/testflight.md) 참고.
+앱 안에서는 카카오맵 도메인 검사를 피하려고 Referer 를 보내지 않으므로(`src/main.jsx`) 카카오 콘솔에 앱 오리진을 등록할 필요가 없습니다.
 
 ## 배포 & 테스터에게 공유하기 (Vercel)
 
@@ -169,7 +187,7 @@ keytool -genkeypair -keystore android/keystore/stamptrip-release.jks -alias stam
    | `BASIC_AUTH_USER` | 테스터에게 알려줄 아이디 |
    | `BASIC_AUTH_PASS` | 테스터에게 알려줄 비밀번호 |
 3. **Deploy** 클릭 → 완료되면 `https://프로젝트명.vercel.app` 형태의 URL 생성
-4. 배포된 도메인을 **카카오 개발자 콘솔 → 앱 설정 → 플랫폼 → Web**에 추가 등록 (`localhost`와는 별개로, 배포 도메인도 반드시 등록해야 지도가 뜸)
+4. 배포된 도메인을 **카카오 개발자 콘솔 → 앱 → 플랫폼 키 → JavaScript 키 → JavaScript SDK 도메인**에 추가 등록 (`localhost`와는 별개로, 배포 도메인도 반드시 등록해야 지도가 뜸)
 5. 테스터에게 배포 URL + 3번에서 정한 아이디/비밀번호 전달 → 접속 시 브라우저 기본 로그인 창이 뜨고, 맞는 아이디/비밀번호를 입력해야 화면이 보임
 
 ### 접근 제한 방식 (Basic Auth)
@@ -229,7 +247,7 @@ npm run trending:dry -- --limit 10   # 시군구 10곳만
 2. **내 애플리케이션 → 애플리케이션 추가하기**
 3. 앱 이름 입력 후 생성 → **앱 키** 탭에서 **JavaScript 키** 복사 (REST API 키 아님, 반드시 JavaScript 키)
 4. **제품 설정 → 카카오맵** 이동 → **카카오맵 활성화** 스위치 ON *(빠뜨리면 지도 로드 시 `disabled OPEN_MAP_AND_LOCAL service` 오류 발생)*
-5. **앱 설정 → 플랫폼 → Web 플랫폼 등록** → 사이트 도메인 추가 (`http://localhost:5173`, 배포 시 실제 도메인도 추가) *(빠뜨리면 `domain mismatched` 오류 발생)*
+5. **앱 → 플랫폼 키 → JavaScript 키 이름([대표] Default JS Key) 클릭 → JavaScript SDK 도메인** 추가 (2025-12 콘솔 개편 전에는 앱 설정 → 플랫폼 → Web) (`http://localhost:5173`, 배포 시 실제 도메인도 추가) *(빠뜨리면 `domain mismatched` 오류 발생)*
 6. `.env`의 `VITE_KAKAO_MAP_KEY`에 붙여넣기
 
 ---
@@ -308,7 +326,7 @@ docs/
 | 증상 | 원인 | 해결 |
 |---|---|---|
 | `npm run dev` 실행 시 `Permission denied` 또는 `esbuild ... 다른 플랫폼` 오류 | 다른 OS에서 설치한 `node_modules`를 복사해서 사용 | `rm -rf node_modules` (Windows: `rmdir /s /q node_modules`) 후 현재 컴퓨터에서 `npm install` 재실행 |
-| 지도 탭에서 지도가 안 뜸: 콘솔에 `domain mismatched` | Kakao Developers에 현재 도메인(`http://localhost:5173` 등)이 등록되지 않음 | 앱 설정 → 플랫폼 → Web에 도메인 추가 |
+| 지도 탭에서 지도가 안 뜸: 콘솔에 `domain mismatched` | Kakao Developers에 현재 도메인(`http://localhost:5173` 등)이 등록되지 않음 | 앱 → 플랫폼 키 → JavaScript 키 → JavaScript SDK 도메인에 추가 |
 | 지도 탭에서 지도가 안 뜸: 콘솔에 `disabled OPEN_MAP_AND_LOCAL service` | 카카오맵 제품이 앱에서 비활성화 상태 | 제품 설정 → 카카오맵 → 활성화 ON |
 | 홈/코스 탭에 행사·축제가 안 뜸 | TourAPI 키 미설정 또는 활용신청 미승인 | `.env`의 `VITE_TOUR_API_KEY` 확인, 공공데이터포털에서 활용신청 상태 확인 |
 | 로그인 화면에 "Supabase 환경변수 설정이 필요해요" | `.env`에 `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` 없음 | `docs/SUPABASE_SETUP.md` 4번 참고 후 dev 서버 재시작 |
