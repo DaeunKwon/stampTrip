@@ -22,6 +22,7 @@
     "android:open": "cap open android",
     "android:release": "bash scripts/android-release.sh",
     "store:shots": "node scripts/store-screenshots.mjs",
+    "store:banner": "node scripts/store-banner.mjs",
     "ios:open": "cap open ios",
     "assets": "capacitor-assets generate --iconBackgroundColor #ffffff --iconBackgroundColorDark #1f2937 --splashBackgroundColor #ffffff --splashBackgroundColorDark #111827",
     "ios:build": "npm run cap:sync && xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination \"generic/platform=iOS Simulator\" build -quiet",
