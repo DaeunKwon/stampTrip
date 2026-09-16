@@ -117,7 +117,7 @@ export default function Login() {
       </div>
 
       <p className="text-center text-[10.5px] text-gray-400 leading-relaxed mt-5">
-        시작하면{' '}
+        시작하면 만 14세 이상이며{' '}
         <Link to="/terms" className="text-primary-600 font-semibold">이용약관</Link>
         {' '}및{' '}
         <Link to="/privacy" className="text-primary-600 font-semibold">개인정보처리방침</Link>
