@@ -24,8 +24,8 @@ export const FESTIVALS = [
 
 // 서울시청 반경 1km 관광지 (locationBasedList2). dist 는 m 단위 문자열
 export const NEARBY_SPOTS = [
-  { contentid: '4001', title: '덕수궁', addr1: '서울특별시 중구 세종대로 99', firstimage: 'https://img.test/4001.jpg', mapx: '126.9750', mapy: '37.5658', dist: '280', lclsSystm1: 'HS', contenttypeid: '12' },
-  { contentid: '4002', title: '청계광장', addr1: '서울특별시 종로구 청계천로 1', firstimage: '', mapx: '126.9780', mapy: '37.5690', dist: '150', lclsSystm1: 'NA', contenttypeid: '12' },
+  { contentid: '4001', title: '덕수궁', addr1: '서울특별시 중구 세종대로 99', firstimage: 'https://img.test/4001.jpg', mapx: '126.9776', mapy: '37.5660', dist: '280', lclsSystm1: 'HS', contenttypeid: '12' },
+  { contentid: '4002', title: '청계광장', addr1: '서울특별시 종로구 청계천로 1', firstimage: '', mapx: '126.9783', mapy: '37.5672', dist: '150', lclsSystm1: 'NA', contenttypeid: '12' },
   { contentid: '4003', title: '광화문', addr1: '서울특별시 종로구 사직로 161', firstimage: 'https://img.test/4003.jpg', mapx: '126.9769', mapy: '37.5759', dist: '1050', lclsSystm1: 'HS', contenttypeid: '12' },
   { contentid: '4009', title: '광화문 국밥집', addr1: '서울특별시 종로구', firstimage: '', mapx: '126.977', mapy: '37.571', dist: '400', lclsSystm1: 'FD', contenttypeid: '39' },
   // 기준 행사 자신 (주변 목록에서 제외돼야 함)

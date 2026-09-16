@@ -1,17 +1,18 @@
-# 🗺️ 도장여행
+# 🗺️ 스탬프여행
 
-> 여행 혜택 조회 · 코스 추천 · 방문 인증 스탬프를 한 번에 즐기는 스마트 여행 플랫폼
+> 행사·축제 정보 · 코스 만들기 · GPS 방문 인증 스탬프를 한 번에 즐기는 모바일 여행 앱
 
 ## 핵심 기능
 
-| 기능 | 설명 |
+하단 탭 4개(홈 · 코스 · 지도 · My)로 구성됩니다.
+
+| 탭 | 기능 |
 |------|------|
-| 혜택 통합 보드 | 지역별 관광지 할인 · 행사 · 프로모션 카드 UI |
-| 명소 코스 추천 | 도보 거리 · 동선 기준 1~3일 코스 자동 제공 |
-| GPS 스탬프 인증 | 관광지 반경 100m 진입 시 스탬프 버튼 활성화 |
-| 나의 여행 아카이브 | 수집한 스탬프 · 관심 목록을 계정에 저장 (기기 간 동기화) |
-| 소셜 로그인 | 카카오 · Google 계정으로 가입/로그인 (로그인 필수) |
-| 혜택-코스-인증 연계 | 코스 내 관광지 혜택 자동 매칭 |
+| 홈 | 진행중인 행사·축제 목록 + "요즘 뜨는 명소"(관광지 집중률 예보 기반 일일 배치) |
+| 코스 | 지역별 행사·축제 정보 → 상세에서 **주변 코스 스팟 보기**(반경 1km 명소) → 명소를 골라 내 코스로 저장 |
+| 지도 | 카카오맵 위에 현재 위치와 주변 관광지 표시, 관광지 **반경 100m** 진입 시 스탬프 버튼 활성화 (GPS 방문 인증) |
+| My | 내 코스 · 스탬프 컬렉션 · 관심 목록 · 계정 설정 (Supabase 저장, 기기 간 동기화) |
+| 로그인 | 카카오 · Google 소셜 로그인 전용 (로그인 필수), 첫 가입 시 닉네임 설정 |
 
 ## 기술 스택
 
@@ -20,13 +21,17 @@
 - **React Router v6** (클라이언트 라우팅)
 - **한국관광공사 TourAPI** (관광 데이터)
 - **카카오맵 API** (지도 · GPS 거리 계산)
-- **Supabase** (카카오 · Google 소셜 로그인, 스탬프 · 관심 목록 DB 저장)
+- **Supabase** (카카오 · Google 소셜 로그인, 스탬프 · 관심 목록 · 코스 DB 저장)
+- **PWA** (vite-plugin-pwa — 홈 화면 설치, 서비스워커)
+- **Capacitor 8** (같은 웹 번들을 Android · iOS 앱으로 래핑)
+- **Vercel** (웹 호스팅 + "요즘 뜨는 명소" 일일 배치 Cron, 서울 리전)
+- **Vitest + Playwright** (통합테스트 · 웹/Android/iOS E2E)
 
 ## 실행 방법
 
 ### 0. 사전 준비 (필수 프로그램 설치)
 
-**Git**과 **Node.js (LTS, 18 이상 권장)**가 필요합니다. `npm`은 Node.js 설치 시 함께 설치됩니다.
+**Git**과 **Node.js (22 LTS 이상)**가 필요합니다. 앱 실행 자체는 Node 18에서도 되지만, 테스트(Playwright)는 20 이상, 배치 스크립트(supabase-js 의 내장 WebSocket)는 22 이상이 필요합니다. `npm`은 Node.js 설치 시 함께 설치됩니다.
 
 <details>
 <summary><b>🍎 macOS</b></summary>
@@ -42,7 +47,7 @@
 3. 설치 확인:
    ```bash
    git --version
-   node -v   # v18.x 이상
+   node -v   # v22.x 이상
    npm -v
    ```
 
@@ -58,7 +63,7 @@
 3. 설치 확인 (PowerShell 또는 Git Bash):
    ```powershell
    git --version
-   node -v   # v18.x 이상
+   node -v   # v22.x 이상
    npm -v
    ```
 
@@ -119,6 +124,16 @@ npm run build
 npm run preview  # 빌드 결과 미리보기
 ```
 
+### 6. 테스트
+
+```bash
+npm test                # Vitest 통합테스트 (화면 흐름 · 배치 · 딥링크 파싱)
+npm run test:e2e        # Playwright E2E — 웹 · Android(Pixel 7) · iOS(iPhone 14 WebKit)
+npm run test:e2e:web    # 프로젝트 하나만
+```
+
+E2E 는 실제 API 키 없이 동작합니다(네트워크 전부 가로챔). 구조 · 실기기 수동 체크리스트는 [tests/README.md](tests/README.md) 참고.
+
 ---
 
 ## 배포 & 테스터에게 공유하기 (Vercel)
@@ -142,6 +157,8 @@ npm run preview  # 빌드 결과 미리보기
 ### 접근 제한 방식 (Basic Auth)
 
 이 저장소의 [`middleware.js`](middleware.js)가 Vercel Edge Middleware로 동작하며, `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` 환경변수가 설정된 경우에만 모든 요청에 HTTP Basic 인증을 요구합니다. 두 변수를 비워두면(로컬 개발 등) 인증 없이 통과합니다.
+
+> 공모전 심사 · 일반 공개처럼 링크만으로 접속돼야 하는 경우에는 `BASIC_AUTH_USER` / `BASIC_AUTH_PASS` 를 비워 두세요(두 변수를 지우고 재배포).
 
 > ⚠️ `VITE_` 접두사가 붙은 키(TourAPI, 카카오맵)는 클라이언트 번들에 그대로 포함되어 로그인한 사람이라면 브라우저 개발자 도구에서 볼 수 있습니다. Basic Auth는 "아무나 사이트에 들어오는 것"만 막을 뿐, 로그인한 테스터에게 API 키 자체를 숨기지는 못합니다 — 신뢰할 수 있는 소수의 테스터에게만 공유하세요.
 
@@ -204,49 +221,66 @@ npm run trending:dry -- --limit 10   # 시군구 10곳만
 ```
 src/
 ├── pages/
-│   ├── Login.jsx           # 소셜 로그인 (카카오 · Google)
-│   ├── Onboarding.jsx      # 첫 가입 닉네임 설정
-│   ├── Home.jsx            # 메인 (혜택 보드 + 추천 코스 미리보기)
-│   ├── Course.jsx          # 명소 코스 추천
-│   ├── NearbySpots.jsx     # 코스 주변 명소
-│   ├── Map.jsx             # 지도 + GPS 스탬프 인증
-│   ├── Archive.jsx         # 마이 탭 (프로필 · 스탬프 · 관심 목록)
-│   ├── AccountSettings.jsx # 계정 설정 (닉네임 · 로그아웃 · 탈퇴)
-│   ├── Detail.jsx          # 관광지 상세
-│   └── Terms.jsx / Privacy.jsx  # 이용약관 · 개인정보처리방침
+│   ├── Login.jsx            # 소셜 로그인 (카카오 · Google)
+│   ├── Onboarding.jsx       # 첫 가입 닉네임 설정
+│   ├── Home.jsx             # 홈 (진행중인 행사·축제 + 요즘 뜨는 명소)
+│   ├── Course.jsx           # 코스 탭 (지역별 행사·축제 목록)
+│   ├── NearbySpots.jsx      # 주변 코스 스팟 (반경 1km 명소) → 코스 만들기
+│   ├── Map.jsx              # 지도 + GPS 스탬프 인증 (STAMP_RADIUS)
+│   ├── Archive.jsx          # My 탭 허브 (내 코스 · 스탬프 · 관심 목록 · 설정)
+│   ├── MyCourses.jsx / CourseDetail.jsx   # 내 코스 목록 · 상세
+│   ├── MyStamps.jsx / MyFavorites.jsx     # 스탬프 컬렉션 · 관심 목록
+│   ├── AccountSettings.jsx  # 계정 설정 (닉네임 · 로그아웃 · 탈퇴)
+│   ├── Detail.jsx           # 관광지 상세 (직접 URL 진입용)
+│   └── LegalLayout.jsx / Terms.jsx / Privacy.jsx  # 이용약관 · 개인정보처리방침
 ├── auth/
-│   ├── AuthProvider.jsx    # 세션 · 프로필 상태 (useAuth)
-│   └── RequireAuth.jsx     # 로그인 필수 라우트 가드
+│   ├── AuthProvider.jsx     # 세션 · 프로필 상태 (useAuth), 네이티브 앱 딥링크 로그인 분기
+│   └── RequireAuth.jsx      # 로그인 필수 라우트 가드
 ├── store/
-│   └── UserDataProvider.jsx # 스탬프 · 관심 목록 (Supabase, useUserData)
+│   └── UserDataProvider.jsx # 스탬프 · 관심 목록 · 코스 (Supabase, useUserData)
+├── native/
+│   ├── platform.js          # Capacitor 실행 여부 · 로그인 딥링크 상수
+│   └── auth.js              # 앱 안 소셜 로그인 (시스템 브라우저 + 딥링크 복귀)
 ├── components/
-│   ├── Navbar.jsx          # 하단 탭 네비게이션
-│   ├── ProfileCard.jsx     # 마이 탭 프로필 카드
-│   ├── BenefitCard.jsx     # 혜택 카드
-│   ├── CourseCard.jsx      # 코스 카드
-│   ├── StampBadge.jsx      # 스탬프 뱃지
-│   ├── DetailModal.jsx     # 관광지 상세 정보 모달
-│   └── Pagination.jsx      # 페이지네이션
+│   ├── Navbar.jsx           # 하단 탭 네비게이션
+│   ├── TrendingSection.jsx  # 홈 "요즘 뜨는 명소"
+│   ├── BenefitCard.jsx / CourseCard.jsx / StampBadge.jsx / Pagination.jsx
+│   ├── DetailModal.jsx      # 관광지 · 행사 상세 팝업 (주변 코스 스팟 진입점)
+│   ├── CourseMap.jsx / CourseSheet.jsx    # 코스 만들기 지도 · 저장 시트
+│   ├── StampCeremony.jsx    # 도장 찍기 연출
+│   ├── ConfirmModal.jsx / DeleteAccountModal.jsx / EndedFestivalModal.jsx / Toast.jsx
+│   └── Avatar.jsx / BrandMark.jsx / ProfileCard.jsx / Provider.jsx / Splash.jsx / SubHeader.jsx / ScrollToTop.jsx
 ├── api/
-│   ├── supabase.js         # Supabase 클라이언트
-│   ├── tourApi.js          # TourAPI 호출 모듈
-│   └── kakaoMap.js         # 카카오맵 초기화 · 거리 계산
-└── hooks/
-    ├── useGPS.js           # GPS 위치 추적 훅
-    ├── useStamp.js         # 스탬프 (UserDataProvider 래퍼)
-    └── useFavorite.js      # 관심 목록 (UserDataProvider 래퍼)
+│   ├── supabase.js          # Supabase 클라이언트
+│   ├── tourApi.js           # TourAPI 호출 모듈
+│   ├── kakaoMap.js          # 카카오맵 초기화 · 거리 계산 · 마커 이미지
+│   └── trending.js          # 요즘 뜨는 명소 조회 (trending_daily)
+├── hooks/
+│   ├── useGPS.js            # GPS 위치 추적 (브라우저 / Capacitor Geolocation)
+│   ├── useStamp.js / useFavorite.js / useCourse.js   # UserDataProvider 래퍼
+│   └── useBodyScrollLock.js # 팝업 열림 시 배경 스크롤 잠금
+└── data/
+    └── sigungu.json         # 시군구 코드 (배치용)
+api/
+└── trending-snapshot.js     # Vercel 서버리스 함수 (Cron 이 호출)
+scripts/
+└── trending-snapshot.mjs    # 요즘 뜨는 명소 배치 로직 (로컬 dry-run 가능)
 supabase/
-└── schema.sql              # 테이블 · RLS · 탈퇴 RPC (SQL Editor에 실행)
+└── schema.sql               # 테이블 · RLS · 탈퇴 RPC · 배치 테이블 (SQL Editor에 실행)
+tests/  e2e/                 # Vitest 통합테스트 · Playwright E2E (tests/README.md)
+android/  capacitor.config.json  assets/   # Capacitor Android 프로젝트 · 앱 설정 · 아이콘 원본
+middleware.js  vercel.json   # Basic Auth · 리라이트 · Cron · 서울 리전
 docs/
-└── SUPABASE_SETUP.md       # 로그인 콘솔 설정 가이드
+└── SUPABASE_SETUP.md        # 로그인 콘솔 설정 가이드
 ```
 
 ## 주요 설계 결정
 
-- **스탬프 인증 반경**: 100m (GPS 정확도 고려 · `Map.jsx`에서 export하는 `STAMP_RADIUS` 상수로 조정, `Archive.jsx` 안내 문구도 같은 상수를 참조)
+- **스탬프 인증 반경**: 100m (GPS 정확도 고려 · `Map.jsx`에서 export하는 `STAMP_RADIUS` 상수 하나로 조정. 지도 탭 · `MyStamps.jsx` 안내 문구 · 테스트가 모두 같은 상수를 참조하므로 값을 바꿔도 문구가 어긋나지 않는다)
 - **카카오맵 동적 로드**: `autoload=false` + `kakao.maps.load()` 패턴으로 렌더링 블로킹 방지
 - **로그인 필수 · 소셜 전용**: 아이디/비밀번호 없이 카카오·Google OAuth만 지원. 신규/기존 판별은 `profiles` 행 존재 여부로만 한다
-- **데이터는 Supabase에만**: 스탬프·관심 목록은 낙관적 업데이트 후 서버 반영, 실패 시 롤백 + 토스트. RLS로 본인 행만 접근
+- **데이터는 Supabase에만**: 스탬프·관심 목록·코스는 낙관적 업데이트 후 서버 반영, 실패 시 롤백 + 토스트. RLS로 본인 행만 접근
+- **네이티브 앱은 같은 번들**: Capacitor 로 감싼 앱에서는 `isNativeApp` 분기로 소셜 로그인(시스템 브라우저 + `stamptrip://auth/callback` 딥링크)과 GPS(플러그인)만 갈라지고, 서비스워커는 등록하지 않는다
 - **TourAPI 인코딩**: 공공데이터포털 일반 인증키(Decoding) 사용 — URL 이중 인코딩 불필요
 
 ---
@@ -258,6 +292,6 @@ docs/
 | `npm run dev` 실행 시 `Permission denied` 또는 `esbuild ... 다른 플랫폼` 오류 | 다른 OS에서 설치한 `node_modules`를 복사해서 사용 | `rm -rf node_modules` (Windows: `rmdir /s /q node_modules`) 후 현재 컴퓨터에서 `npm install` 재실행 |
 | 지도 탭에서 지도가 안 뜸: 콘솔에 `domain mismatched` | Kakao Developers에 현재 도메인(`http://localhost:5173` 등)이 등록되지 않음 | 앱 설정 → 플랫폼 → Web에 도메인 추가 |
 | 지도 탭에서 지도가 안 뜸: 콘솔에 `disabled OPEN_MAP_AND_LOCAL service` | 카카오맵 제품이 앱에서 비활성화 상태 | 제품 설정 → 카카오맵 → 활성화 ON |
-| 혜택/코스 탭에 데이터가 안 뜸 | TourAPI 키 미설정 또는 활용신청 미승인 | `.env`의 `VITE_TOUR_API_KEY` 확인, 공공데이터포털에서 활용신청 상태 확인 |
+| 홈/코스 탭에 행사·축제가 안 뜸 | TourAPI 키 미설정 또는 활용신청 미승인 | `.env`의 `VITE_TOUR_API_KEY` 확인, 공공데이터포털에서 활용신청 상태 확인 |
 | 로그인 화면에 "Supabase 환경변수 설정이 필요해요" | `.env`에 `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` 없음 | `docs/SUPABASE_SETUP.md` 4번 참고 후 dev 서버 재시작 |
 | 카카오/Google 인증 후 다시 로그인 화면으로 돌아옴, `redirect_uri_mismatch`, `KOE006` 등 | 콘솔 설정(Redirect URI · Supabase Redirect URLs) 누락 | `docs/SUPABASE_SETUP.md` 문제 해결 표 참고 |

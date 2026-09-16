@@ -82,7 +82,7 @@ describe('주변 코스 스팟 → 내 코스 만들기', () => {
     const [row] = fake.rows('courses')
     expect(row).toMatchObject({ user_id: TEST_USER_ID, name: '시청 한 바퀴', event_content_id: '3001', event_title: '서울 빛초롱 축제', event_mapx: '126.9780', event_mapy: '37.5665' })
     expect(row.spots.map(s => s.contentid)).toEqual(['4002', '4001'])
-    expect(row.spots[1]).toEqual({ contentid: '4001', title: '덕수궁', addr1: '서울특별시 중구 세종대로 99', firstimage: 'https://img.test/4001.jpg', mapx: '126.9750', mapy: '37.5658' })
+    expect(row.spots[1]).toEqual({ contentid: '4001', title: '덕수궁', addr1: '서울특별시 중구 세종대로 99', firstimage: 'https://img.test/4001.jpg', mapx: '126.9776', mapy: '37.5660' })
   })
 
   it('코스 이름은 30자에서 잘리고, 저장 실패 시 시트에 남아 다시 시도할 수 있다', async () => {
