@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 import { isNativeApp } from './native/platform'
+import { applyOtaOnBoot } from './native/updater'
 
 // 네이티브 앱의 오리진(iOS capacitor://localhost, Android https://localhost)은 카카오 개발자 콘솔의
 // 웹 도메인으로 등록할 수 없다(커스텀 스킴 불가). 카카오맵 SDK 는 Referer 가 없으면 도메인 검사를 하지
@@ -20,10 +21,14 @@ if (!isNativeApp && import.meta.env.PROD) {
   import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }))
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>,
-)
+// 네이티브 앱: 받아 둔 새 웹 번들(OTA)이 있으면 화면을 그리기 전에 그 번들로 갈아탄다 (브라우저에서는 바로 false)
+applyOtaOnBoot().then(replaced => {
+  if (replaced) return
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>,
+  )
+})
