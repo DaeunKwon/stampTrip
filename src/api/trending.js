@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase'
+import { withHttpsImages } from '../utils/imageUrl'
 
 /**
  * 홈 "요즘 뜨는 명소" 목록.
@@ -18,6 +19,6 @@ export async function getTrendingSpots() {
     .limit(1)
     .maybeSingle()
   if (error) throw new Error(`요즘 뜨는 명소 조회 실패: ${error.message}`)
-  cache = Array.isArray(data?.items) ? data.items : []
+  cache = Array.isArray(data?.items) ? data.items.map(withHttpsImages) : []
   return cache
 }

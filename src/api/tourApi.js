@@ -1,3 +1,5 @@
+import { withHttpsImages } from '../utils/imageUrl';
+
 const BASE_URL = 'https://apis.data.go.kr/B551011/KorService2';
 const API_KEY = import.meta.env.VITE_TOUR_API_KEY;
 
@@ -17,7 +19,7 @@ function buildParams(extra = {}) {
 function extractItems(data) {
   const item = data?.response?.body?.items?.item;
   if (!item) return [];
-  return Array.isArray(item) ? item : [item];
+  return (Array.isArray(item) ? item : [item]).map(withHttpsImages);
 }
 
 async function fetchApi(endpoint, params) {

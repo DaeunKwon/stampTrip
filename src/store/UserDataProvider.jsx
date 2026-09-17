@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useMemo, u
 import { supabase } from '../api/supabase'
 import { useAuth } from '../auth/AuthProvider'
 import { useToast } from '../components/Toast'
+import { httpsImage, withHttpsImages } from '../utils/imageUrl'
 
 const UserDataContext = createContext(null)
 
@@ -11,14 +12,14 @@ const stampFromRow = r => ({
   contentId: r.content_id,
   title: r.title,
   addr1: r.addr1,
-  firstimage: r.firstimage ?? '',
+  firstimage: httpsImage(r.firstimage ?? ''),
   stampedAt: r.stamped_at,
 })
 const favoriteFromRow = r => ({
   contentid: r.content_id,
   title: r.title,
   addr1: r.addr1,
-  firstimage: r.firstimage ?? '',
+  firstimage: httpsImage(r.firstimage ?? ''),
   eventenddate: r.event_end_date ?? '',
   savedAt: r.saved_at,
 })
@@ -31,7 +32,7 @@ const courseFromRow = r => ({
     mapx: r.event_mapx,
     mapy: r.event_mapy,
   },
-  spots: Array.isArray(r.spots) ? r.spots : [],
+  spots: Array.isArray(r.spots) ? r.spots.map(withHttpsImages) : [],
   createdAt: r.created_at,
 })
 

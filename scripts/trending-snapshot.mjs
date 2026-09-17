@@ -132,7 +132,9 @@ export async function runSnapshot({ tourApiKey, supabaseUrl, serviceKey, dryRun 
       name: c.name,
       areaNm: c.areaNm, signguNm: c.signguNm, signguCd: c.signguCd,
       score: round2(c.score), weekRate: round2(c.week), baseRate: round2(c.base), usedHistory: c.usedHistory,
-      contentId: hit.contentid, title: hit.title, addr1: hit.addr1, firstimage: hit.firstimage,
+      contentId: hit.contentid, title: hit.title, addr1: hit.addr1,
+      // 앱(Android WebView)은 http 이미지를 혼합 콘텐츠로 차단한다 → https 로 저장
+      firstimage: hit.firstimage?.replace(/^http:\/\//i, 'https://'),
       mapx: hit.mapx, mapy: hit.mapy, description: desc,
     })
     log(`  ${results.length}. ${c.areaNm} ${c.signguNm} ${c.name} ×${round2(c.score)} → ${hit.contentid} ${hit.title}`)
