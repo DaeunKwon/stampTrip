@@ -5,6 +5,7 @@ import useBodyScrollLock from '../hooks/useBodyScrollLock'
 export const COURSE_NAME_MAX = 30
 const WALK_M_PER_MIN = 67 // 약 4km/h
 const DRAG_CLOSE_PX = 90 // 이만큼 이상 끌어내리면 닫힘
+const KEYBOARD_MIN_PX = 120 // 보이는 높이가 이만큼 이상 줄면 키패드가 뜬 것으로 본다
 
 /** ★ 행사 → 스팟 순서대로 이어지는 도보 거리 합 (m) */
 export function courseDistance(event, spots) {
@@ -55,9 +56,27 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
   const [inputFocused, setInputFocused] = useState(false)
   // 실제로 보이는 영역(visualViewport). 모바일 키패드가 뜨면 이 값이 줄어든다
   const [viewport, setViewport] = useState(() => readViewport(null))
+  // 키패드가 없을 때의 보이는 높이(지금까지 본 최댓값). 화면 폭이 바뀌면(회전) 다시 잰다
+  const baseRef = useRef({ width: 0, height: 0 })
+  const keyboardWasOpenRef = useRef(false)
 
   // 시트가 떠 있는 동안 뒤 페이지 스크롤 잠금 (iOS 포함)
   useBodyScrollLock()
+
+  function measure() {
+    const next = readViewport(overlayRef.current)
+    const base = baseRef.current
+    if (base.width !== window.innerWidth) baseRef.current = { width: window.innerWidth, height: next.height }
+    else if (next.height > base.height) base.height = next.height
+    const keyboardOpen = baseRef.current.height - next.height > KEYBOARD_MIN_PX
+    // Android 는 뒤로가기/키패드 내리기 버튼으로 키패드를 닫아도 입력칸이 blur 되지 않는다.
+    // 그대로 두면 시트가 '입력 중' 높이로 남으므로, 키패드가 닫힌 걸 감지하면 직접 blur 한다
+    if (keyboardWasOpenRef.current && !keyboardOpen && document.activeElement === inputRef.current) {
+      inputRef.current.blur()
+    }
+    keyboardWasOpenRef.current = keyboardOpen
+    setViewport(next)
+  }
 
   // 키패드가 뜨거나 내려갈 때 보이는 영역 크기에 맞춰 오버레이를 다시 맞춘다
   useEffect(() => {
@@ -67,7 +86,7 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
     let raf = 0
     const update = () => {
       cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => setViewport(readViewport(overlayRef.current)))
+      raf = requestAnimationFrame(measure)
     }
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
@@ -84,7 +103,7 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
   // 키패드 애니메이션 중에는 이벤트가 한 번만 오기도 해서, 포커스 변화 후 몇 차례 더 재서 맞춘다
   useEffect(() => {
     const timers = [80, 200, 350, 600].map(ms =>
-      setTimeout(() => setViewport(readViewport(overlayRef.current)), ms),
+      setTimeout(measure, ms),
     )
     return () => timers.forEach(clearTimeout)
   }, [inputFocused])
