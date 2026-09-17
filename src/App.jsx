@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Outlet } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import { ToastProvider } from './components/Toast'
@@ -20,6 +21,7 @@ import Onboarding from './pages/Onboarding'
 import AccountSettings from './pages/AccountSettings'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
+import { initOta } from './native/updater'
 
 /** 로그인 후 화면 공통 셸: 모바일 프레임 + 하단 탭바 */
 function AppShell() {
@@ -34,6 +36,9 @@ function AppShell() {
 }
 
 export default function App() {
+  // 네이티브 앱: 첫 화면이 그려진 뒤 OTA 에 '정상 기동'을 알리고 새 웹 번들을 확인한다 (브라우저에서는 no-op)
+  useEffect(() => { initOta().catch(() => {}) }, [])
+
   return (
     <AuthProvider>
     <ToastProvider>

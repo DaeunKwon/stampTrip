@@ -317,6 +317,7 @@ docs/
 - **로그인 필수 · 소셜 전용**: 아이디/비밀번호 없이 카카오·Google OAuth만 지원. 신규/기존 판별은 `profiles` 행 존재 여부로만 한다
 - **데이터는 Supabase에만**: 스탬프·관심 목록·코스는 낙관적 업데이트 후 서버 반영, 실패 시 롤백 + 토스트. RLS로 본인 행만 접근
 - **네이티브 앱은 같은 번들**: Capacitor 로 감싼 앱에서는 `isNativeApp` 분기로 소셜 로그인(시스템 브라우저 + `stamptrip://auth/callback` 딥링크)과 GPS(플러그인)만 갈라지고, 서비스워커는 등록하지 않는다
+- **앱 화면은 OTA 로 갱신**: `git push` → Vercel 이 웹 배포와 함께 앱용 번들(`/ota/bundle-<버전>.zip` + `/ota/version.json`, `scripts/ota-bundle.mjs`)을 올리고, 설치된 앱(`src/native/updater.js`, `@capgo/capacitor-updater` 수동 모드)이 실행 때 새 버전을 받아 다음 실행부터 적용한다. 새 번들이 10초 안에 정상 기동을 알리지 못하면 이전 번들로 자동 복귀. 스토어 재배포는 네이티브 변경(플러그인·권한·아이콘·SDK) 때만 — 그때 `android/app/build.gradle` 의 versionCode 와, 새 플러그인에 의존하는 번들이라면 `ota-bundle.mjs` 의 `MIN_NATIVE_BUILD` 를 함께 올린다
 - **TourAPI 인코딩**: 공공데이터포털 일반 인증키(Decoding) 사용 — URL 이중 인코딩 불필요
 
 ---

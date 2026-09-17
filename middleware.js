@@ -1,6 +1,7 @@
 export const config = {
   // /api/* 는 Vercel Cron 이 부르는 서버 함수라 Basic Auth 대상에서 뺀다 (자체 CRON_SECRET 으로 인증)
-  matcher: '/((?!api/).*)',
+  // /ota/* 는 설치된 앱이 새 웹 번들을 받아 가는 경로라 인증 없이 열어 둔다
+  matcher: '/((?!api/|ota/).*)',
 }
 
 export default function middleware(request) {

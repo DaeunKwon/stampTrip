@@ -15,6 +15,12 @@
     "StatusBar": {
       "style": "LIGHT",
       "backgroundColor": "#ffffff"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "statsUrl": "",
+      "channelUrl": "",
+      "resetWhenUpdate": true
     }
   }
 }

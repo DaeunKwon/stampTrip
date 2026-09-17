@@ -1,6 +1,11 @@
 {
   "regions": ["icn1"],
+  "buildCommand": "npm run vercel-build",
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "headers": [
+    { "source": "/ota/(.*)", "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }] },
+    { "source": "/ota/version.json", "headers": [{ "key": "Cache-Control", "value": "no-store" }] }
+  ],
   "functions": {
     "api/trending-snapshot.js": { "maxDuration": 300 }
   },
