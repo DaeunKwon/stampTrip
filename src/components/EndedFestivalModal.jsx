@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
+import useBackClose from '../hooks/useBackClose'
 
 /**
  * 관심 목록에서 기간이 종료된 행사를 클릭했을 때 뜨는 안내 팝업.
@@ -8,6 +9,9 @@ import useBodyScrollLock from '../hooks/useBodyScrollLock'
 export default function EndedFestivalModal({ item, onRemove, onClose }) {
   // 배경 스크롤 방지 (iOS 포함)
   useBodyScrollLock()
+
+  // Android 뒤로 가기 닫기
+  useBackClose(onClose)
 
   // ESC 닫기
   useEffect(() => {

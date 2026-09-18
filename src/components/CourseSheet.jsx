@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { calcDistance } from '../api/kakaoMap'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
+import useBackClose from '../hooks/useBackClose'
 
 export const COURSE_NAME_MAX = 30
 const WALK_M_PER_MIN = 67 // 약 4km/h
@@ -62,6 +63,9 @@ export default function CourseSheet({ event, spots, saving, onClose, onSave }) {
 
   // 시트가 떠 있는 동안 뒤 페이지 스크롤 잠금 (iOS 포함)
   useBodyScrollLock()
+
+  // Android 뒤로 가기로 시트 닫기 (저장 중에는 막는다)
+  useBackClose(onClose, { blocked: saving })
 
   function measure() {
     const next = readViewport(overlayRef.current)

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getDetailCommon, getDetailIntro } from '../api/tourApi'
 import useFavorite from '../hooks/useFavorite'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
+import useBackClose from '../hooks/useBackClose'
 import { useToast } from './Toast'
 import { AlertIcon } from './Icons'
 
@@ -63,6 +64,9 @@ export default function DetailModal({ contentId, onClose }) {
 
   // 배경 스크롤 방지 (iOS 포함)
   useBodyScrollLock()
+
+  // Android 뒤로 가기 닫기
+  useBackClose(onClose, { blocked: loading })
 
   // ESC 닫기
   useEffect(() => {

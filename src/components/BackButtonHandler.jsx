@@ -7,7 +7,7 @@ import { listenBackButton } from '../native/backButton'
 export default function BackButtonHandler() {
   const showToast = useToast()
 
-  useEffect(() => listenBackButton(() => showToast('한 번 더 누르면 종료됩니다')), [showToast])
+  useEffect(() => listenBackButton(() => showToast('한 번 더 누르면 종료됩니다', { bottom: true })), [showToast])
 
   return null
 }

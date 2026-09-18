@@ -1,7 +1,10 @@
 import { useEffect } from 'react'
+import useBackClose from '../hooks/useBackClose'
 
 /** 확인/취소 팝업. DeleteAccountModal 과 같은 틀. */
 export default function ConfirmModal({ title, message, confirmLabel = '확인', danger = false, onConfirm, onClose }) {
+  useBackClose(onClose)
+
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)

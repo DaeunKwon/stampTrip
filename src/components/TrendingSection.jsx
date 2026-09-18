@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { getTrendingSpots } from '../api/trending'
 import { REGIONS } from '../data/regions'
+import useBackClose from '../hooks/useBackClose'
 
 const HOME_COUNT = 5
 
@@ -54,6 +55,9 @@ export function pickTrending(all, region) {
 function RegionSelect({ value, onChange }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef(null)
+
+  // Android 뒤로 가기로 목록 닫기
+  useBackClose(() => setOpen(false), { active: open })
 
   // 바깥을 누르거나 ESC 를 누르면 닫는다
   useEffect(() => {

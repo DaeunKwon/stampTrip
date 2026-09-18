@@ -1,7 +1,10 @@
 import { useEffect } from 'react'
+import useBackClose from '../hooks/useBackClose'
 
 /** 회원 탈퇴 확인 팝업. EndedFestivalModal 과 같은 틀. */
 export default function DeleteAccountModal({ courseCount = 0, stampCount, favoriteCount, busy, onConfirm, onClose }) {
+  useBackClose(onClose, { blocked: busy })
+
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && !busy && onClose()
     document.addEventListener('keydown', onKey)

@@ -1,6 +1,7 @@
 // Android 물리(제스처) 뒤로 가기 처리.
 // @capacitor/app 은 backButton 리스너가 없으면 WebView 히스토리가 있을 때만 뒤로 가고, 없으면 아무 것도 하지 않아
 // 첫 화면에서 뒤로 가기를 눌러도 앱이 닫히지 않는다. 리스너를 달아 더 돌아갈 곳이 없으면 앱을 종료한다.
+// 팝업/시트가 떠 있을 때는 그것부터 닫는다.
 import { App } from '@capacitor/app'
 import { nativePlatform } from './platform'
 
@@ -19,11 +20,33 @@ export function resolveBackAction(pathname, canGoBack, now = 0, lastHintAt = nul
   return lastHintAt != null && now - lastHintAt <= EXIT_CONFIRM_MS ? 'exit' : 'hint'
 }
 
+// 떠 있는 팝업/시트의 닫기 함수 스택 (나중에 뜬 것이 위). useBackClose 훅이 넣고 뺀다.
+const closeHandlers = []
+
+/** 뒤로 가기로 닫을 팝업을 등록한다. 해제 함수를 돌려준다. */
+export function registerBackClose(handler) {
+  closeHandlers.push(handler)
+  return () => {
+    const i = closeHandlers.lastIndexOf(handler)
+    if (i !== -1) closeHandlers.splice(i, 1)
+  }
+}
+
+/** 맨 위 팝업을 닫는다. 떠 있는 팝업이 없으면 false */
+export function closeTopPopup() {
+  const top = closeHandlers[closeHandlers.length - 1]
+  if (!top) return false
+  top()
+  return true
+}
+
 /** Android 앱에서만 리스너를 단다. onExitHint: 종료 안내를 띄울 콜백. 해제 함수를 돌려준다. */
 export function listenBackButton(onExitHint) {
   if (nativePlatform !== 'android') return () => {}
   let lastHintAt = null
   const handle = App.addListener('backButton', ({ canGoBack }) => {
+    // 팝업/시트가 떠 있으면 화면 이동·종료 대신 그것부터 닫는다
+    if (closeTopPopup()) return
     const now = Date.now()
     const action = resolveBackAction(window.location.pathname, canGoBack, now, lastHintAt)
     if (action === 'back') {
