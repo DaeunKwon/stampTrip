@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { getLclsSystmName } from '../api/tourApi'
+import useLclsName from '../hooks/useLclsName'
 import useFavorite from '../hooks/useFavorite'
 import { useToast } from './Toast'
 
@@ -15,15 +14,15 @@ export function calcDday(endDateStr) {
   return Math.ceil((end - today) / (1000 * 60 * 60 * 24))
 }
 
-function ddayColorClass(dday) {
+export function ddayColorClass(dday) {
   if (dday <= 7) return 'bg-red-500'
   if (dday <= 30) return 'bg-primary-500'
   return 'bg-gray-400'
 }
 
 export default function BenefitCard({ benefit, onClick }) {
-  const { title, addr1, firstimage, tel, eventenddate, lclsSystm1, lclsSystm2, lclsSystm3 } = benefit
-  const [catName, setCatName] = useState('...')
+  const { title, addr1, firstimage, tel, eventenddate } = benefit
+  const catName = useLclsName(benefit)
   const dday = calcDday(eventenddate)
   // 행사 기간이 지난 경우 카드 전체를 딤드 처리한다 (하트 버튼은 살려둠)
   const ended = dday !== null && dday < 0
@@ -43,16 +42,6 @@ export default function BenefitCard({ benefit, onClick }) {
     })
     showToast(added ? '🧡 관심 목록에 추가했습니다' : '관심 목록에서 해제했습니다')
   }
-
-  useEffect(() => {
-    if (!lclsSystm1 && !lclsSystm2 && !lclsSystm3) {
-      setCatName('')
-      return
-    }
-    getLclsSystmName({ lclsSystm1, lclsSystm2, lclsSystm3 })
-      .then(name => setCatName(name || ''))
-      .catch(() => setCatName(''))
-  }, [lclsSystm1, lclsSystm2, lclsSystm3])
 
   return (
     <div

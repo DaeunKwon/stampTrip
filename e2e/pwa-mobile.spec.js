@@ -10,7 +10,7 @@ test.describe('PWA · 모바일 레이아웃', () => {
     const manifestHref = await page.locator('link[rel="manifest"]').getAttribute('href')
     expect(manifestHref).toBeTruthy()
     const manifest = await (await request.get(manifestHref)).json()
-    expect(manifest).toMatchObject({ name: '스탬프여행', short_name: '스탬프여행', display: 'standalone', start_url: '/', theme_color: '#f97316', lang: 'ko' })
+    expect(manifest).toMatchObject({ name: '스탬프여행', short_name: '스탬프여행', display: 'standalone', start_url: '/', theme_color: '#2f5fe0', lang: 'ko' })
     expect(manifest.icons.some(i => i.purpose === 'maskable')).toBe(true)
     for (const icon of manifest.icons) expect((await request.get(icon.src)).status(), icon.src).toBe(200)
 

@@ -3,11 +3,14 @@ import { installBackend, TEST_USER_ID } from './support/backend.js'
 import { shot, expectNoHorizontalScroll } from './support/shot.js'
 
 test.describe('홈 → 상세 → 주변 코스 스팟 → 내 코스', () => {
-  test('홈에 행사 4개와 요즘 뜨는 명소 5개가 뜨고, 하단 탭바가 화면 안에 고정된다', async ({ page }, testInfo) => {
+  test('홈에 스탬프 현황 · 행사 슬라이드 5개 · 요즘 뜨는 명소 5개가 뜨고, 하단 탭바가 화면 안에 고정된다', async ({ page }, testInfo) => {
     await installBackend(page)
     await page.goto('/')
     await expect(page.getByRole('heading', { name: '서울 빛초롱 축제', level: 3 })).toBeVisible()
-    await expect(page.locator('section').first().getByRole('heading', { level: 3 })).toHaveCount(4)
+    await expect(page.getByRole('link', { name: /STAMP PASSPORT/ })).toBeVisible()
+    const events = page.locator('section', { hasText: '진행중인 행사/축제' })
+    await expect(events.getByRole('heading', { level: 3 })).toHaveCount(5)
+    await expect(events.getByRole('link', { name: '전체보기' })).toHaveAttribute('href', '/course')
     await expect(page.getByText('요즘 뜨는 명소')).toBeVisible()
     await expect(page.getByRole('heading', { name: '감천문화마을', level: 3 })).toBeVisible()
     await expectNoHorizontalScroll(page, expect)

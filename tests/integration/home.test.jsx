@@ -11,15 +11,15 @@ function seedTrending(items = TRENDING_ITEMS) {
 }
 
 describe('홈 탭', () => {
-  it('진행중인 행사 상위 4개를 종료 임박 순으로 보여주고, 전체보기는 코스 탭으로 간다', async () => {
+  it('진행중인 행사 상위 5개를 종료 임박 순 슬라이드로 보여주고, 끝의 전체보기는 코스 탭으로 간다', async () => {
     fake.signIn()
     renderApp({ route: '/' })
     expect(await screen.findByText('서울 빛초롱 축제')).toBeInTheDocument()
     const section = screen.getByText('진행중인 행사/축제').closest('section')
     const titles = within(section).getAllByRole('heading', { level: 3 }).map(h => h.textContent)
-    // eventenddate 오름차순: 빛초롱(+2) → 바다(+5) → 불꽃(+5, 시작일 늦음) → 재즈(+7)
-    expect(titles).toEqual(['서울 빛초롱 축제', '부산 바다 축제', '서울 국제 불꽃축제', '서울 재즈 페스티벌'])
-    expect(screen.getByRole('link', { name: '전체보기 →' })).toHaveAttribute('href', '/course')
+    // eventenddate 오름차순: 빛초롱(+2) → 바다(+5) → 불꽃(+5, 시작일 늦음) → 재즈(+7) → 펜타포트(+9)
+    expect(titles).toEqual(['서울 빛초롱 축제', '부산 바다 축제', '서울 국제 불꽃축제', '서울 재즈 페스티벌', '인천 펜타포트'])
+    expect(within(section).getByRole('link', { name: '전체보기' })).toHaveAttribute('href', '/course')
     // 오늘 이후 행사만 요청
     const call = tourCalls.find(c => c.endpoint === 'searchFestival2')
     expect(call.params).toMatchObject({ eventStartDate: ymd(0), arrange: 'C', numOfRows: '200' })
@@ -69,7 +69,7 @@ describe('홈 탭', () => {
     await screen.findByText('서울 빛초롱 축제')
     await user.click(screen.getAllByRole('button', { name: '관심 추가' })[0])
     expect(await screen.findByText('저장에 실패했어요. 다시 시도해 주세요')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getAllByRole('button', { name: '관심 추가' })).toHaveLength(4))
+    await waitFor(() => expect(screen.getAllByRole('button', { name: '관심 추가' })).toHaveLength(5))
     expect(fake.rows('favorites')).toHaveLength(0)
   })
 
@@ -105,6 +105,14 @@ describe('홈 탭', () => {
     expect(await screen.findByText('정보를 불러올 수 없습니다')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '닫기' }))
     await waitFor(() => expect(screen.queryByText('정보를 불러올 수 없습니다')).not.toBeInTheDocument())
+  })
+
+  it('상단에 내 스탬프 현황(여권 카드)을 보여주고, 누르면 스탬프 컬렉션으로 간다', async () => {
+    fake.signIn()
+    renderApp({ route: '/' })
+    const passport = await screen.findByRole('link', { name: /STAMP PASSPORT/ })
+    expect(passport).toHaveAttribute('href', '/my/stamps')
+    expect(within(passport).getByText('첫 도장을 찍어보세요')).toBeInTheDocument()
   })
 
   it('요즘 뜨는 명소 데이터가 없으면 섹션 자체를 그리지 않는다', async () => {
