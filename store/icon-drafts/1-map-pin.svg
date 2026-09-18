@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0d9488"/></linearGradient><clipPath id="m1"><polygon points="88,176 196,140 316,176 424,140 424,376 316,412 196,376 88,412"/></clipPath></defs>
+      <rect width="512" height="512" fill="url(#bg1)"/>
+      <g transform="translate(0,44)">
+    <polygon points="88,176 196,140 316,176 424,140 424,376 316,412 196,376 88,412" fill="#000" opacity=".18" transform="translate(0,12)" stroke="#000" stroke-width="16" stroke-linejoin="round"/>
+    <polygon points="88,176 196,140 316,176 424,140 424,376 316,412 196,376 88,412" fill="#fff8e7" stroke="#fff8e7" stroke-width="16" stroke-linejoin="round"/>
+    <g clip-path="url(#m1)">
+      <path d="M60 300 C140 250 170 330 250 290 S380 200 450 250 L450 300 C380 250 330 300 250 340 S140 300 60 350Z" fill="#7dd3fc"/>
+      <path d="M88 140h150c0 40-30 80-80 84s-60-20-70-40z" fill="#86efac"/>
+      <path d="M330 330c30-30 80-20 100 10v80H316z" fill="#86efac"/>
+      <path d="M260 120 L300 430" stroke="#e7dcc3" stroke-width="12" fill="none"/>
+      <path d="M80 250 L430 190" stroke="#e7dcc3" stroke-width="10" fill="none"/>
+      <polygon points="196,140 316,176 316,412 196,376" fill="#000" opacity=".07"/>
+    </g>
+        <path d="M120 372 C160 330 200 350 256 296" stroke="#f97316" stroke-width="9" stroke-linecap="round" stroke-dasharray="2 20" fill="none"/>
+      </g>
+      <ellipse cx="256" cy="342" rx="40" ry="12" fill="#000" opacity=".22"/>
+      <g transform="translate(118,62) scale(11.5)">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#f97316" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#f97316"/>
+        <circle cx="12" cy="9" r="2.9" fill="#fff"/>
+      </g></svg>

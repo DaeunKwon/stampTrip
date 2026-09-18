@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><defs><linearGradient id="bg14" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0d9488"/></linearGradient>
+     <mask id="pin14" maskUnits="userSpaceOnUse" x="-140" y="-140" width="280" height="280"><rect x="-140" y="-140" width="280" height="280" fill="#fff"/><g transform="translate(-102,-104) scale(8.5)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#000" fill-rule="evenodd"/></g></mask>
+     <filter id="ink14" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".07" numOctaves="2" seed="11" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -6 4.5" result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/></filter></defs>
+    <rect width="512" height="512" fill="url(#bg14)"/>
+    <g transform="translate(256,256) rotate(-12)" filter="url(#ink14)">
+      <circle r="186" fill="none" stroke="#fff" stroke-width="18"/>
+      <circle r="156" fill="none" stroke="#fff" stroke-width="9" stroke-dasharray="1 24.5" stroke-linecap="round"/>
+      <circle r="130" fill="#fff" mask="url(#pin14)"/>
+    </g></svg>

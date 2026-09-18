@@ -78,6 +78,7 @@
 | 01-login.png | 카카오·Google 로그인 (필요 시) |
 
 다시 만들려면 `npm run dev` 가 5173 에 떠 있는 상태에서 `npm run store:shots`.
+512×512 정사각형 버전(원스토어 규격)은 `store/screenshots-512/` — 원본을 자르지 않고 연한 코발트(primary-50 `#eef3ff`) 배경 위에 축소 배치. 다시 만들려면 `node scripts/store-screenshots-512.mjs`.
 (실제 TourAPI·카카오맵 데이터, 계정 데이터만 가짜 시드)
 
 ## 아이콘 · 그래픽
@@ -139,9 +140,9 @@
 |---|---|
 | 바이너리 유형 | **APK** |
 | 서명키 | **앱 서명 사용 안함** (직접 서명한 APK 업로드) |
-| 파일 | `android/app/release/stamptrip-1.0-release.apk` (versionCode 1 · targetSdk 36 · minSdk 24) |
+| 파일 | `android/app/release/stamptrip-1.0.1-release.apk` (versionCode 2 · targetSdk 36 · minSdk 24) — 1.0.1 은 OTA·코발트 아이콘 포함, 2026-09-18 배포 완료 |
 
-업로드 뒤 화면에 패키지명 `kr.stamptrip.app`, 버전 `1.0 (1)` 이 인식되는지 확인.
+업로드 뒤 화면에 패키지명 `kr.stamptrip.app`, 버전 `1.0.1 (2)` 이 인식되는지 확인.
 
 ### STEP6 In-App 정보
 건너뜀.
