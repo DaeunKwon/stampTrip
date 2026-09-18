@@ -15,16 +15,7 @@ export default function ProfileCard({ courseCount, stampCount, favoriteCount }) 
 
   return (
     <div className="px-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">My 탭</h1>
-        <Link
-          to="/settings"
-          aria-label="계정 설정"
-          className="w-9 h-9 -mr-2 flex items-center justify-center text-gray-400 text-lg active:scale-95 transition-transform"
-        >
-          ⚙️
-        </Link>
-      </div>
+      <h1 className="text-xl font-bold text-gray-900">My 탭</h1>
 
       <div className="mt-3 bg-white border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3">
         <Avatar url={profile?.avatar_url ?? user?.socialAvatar} />

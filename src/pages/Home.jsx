@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import EventSlideCard from '../components/EventSlideCard'
 import StampPassport from '../components/StampPassport'
+import AppIcon from '../components/AppIcon'
 import DetailModal from '../components/DetailModal'
 import TrendingSection from '../components/TrendingSection'
 import { getOngoingFestivals } from '../api/tourApi'
@@ -43,9 +44,9 @@ export default function Home() {
   return (
     <div className="px-4 pt-6 pb-4">
       {/* 헤더 */}
-      <header className="mb-4">
+      <header className="mb-4 flex items-center gap-2.5">
+        <AppIcon className="w-8 h-8" />
         <h1 className="text-2xl font-bold text-gray-900">스탬프여행</h1>
-        <p className="text-sm text-gray-500 mt-1">여행 코스 추천 · 행사 정보 · 방문 스탬프</p>
       </header>
 
       {/* 내 스탬프 현황 */}

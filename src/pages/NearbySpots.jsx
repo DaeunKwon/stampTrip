@@ -89,10 +89,10 @@ export default function NearbySpots() {
 
       {/* 기준 행사 안내 */}
       <div className="mx-4 mt-3.5 px-3.5 py-2.5 bg-primary-50 border border-primary-100 rounded-xl text-xs text-primary-700 leading-relaxed">
-        📍 <span className="font-bold text-primary-600">{title}</span>에서{' '}
+        <span className="font-bold text-primary-600">{title}</span>에서{' '}
         <span className="font-bold text-primary-600">반경 1km 이내</span>의 관광 명소입니다.
         <br />
-        ✅ 가고 싶은 곳을 체크해서 나만의 코스를 만들어 보세요.
+        가고 싶은 곳을 체크해서 나만의 코스를 만들어 보세요.
       </div>
 
       {/* 지도: ★ 행사 + 번호 마커, 선택하면 경로가 그려진다 */}
