@@ -53,7 +53,9 @@ export function getFestivalList({ eventStartDate, areaCode, pageNo = 1, numOfRow
  * searchFestival2 는 응답의 areacode 가 항상 빈 값이라 지역 필터는 호출 쪽에서 addr1 로 직접 건다.
  */
 export async function getOngoingFestivals({ numOfRows = 200 } = {}) {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  // toISOString 은 UTC 라 자정~오전 9시(KST)에는 어제 날짜가 된다 → 기기 현지 날짜로 만든다
+  const now = new Date();
+  const today = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
   const items = await getFestivalList({ eventStartDate: today, numOfRows, arrange: 'C' });
   return [...items].sort((a, b) =>
     (a.eventenddate ?? '').localeCompare(b.eventenddate ?? '') ||
