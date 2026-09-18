@@ -46,7 +46,7 @@ export default function Home() {
       {/* 헤더 */}
       <header className="mb-4 flex items-center gap-2.5">
         <AppIcon className="w-8 h-8" />
-        <h1 className="text-2xl font-bold text-gray-900">스탬프여행</h1>
+        <h1 className="text-xl font-bold text-gray-900">스탬프여행</h1>
       </header>
 
       {/* 내 스탬프 현황 */}
