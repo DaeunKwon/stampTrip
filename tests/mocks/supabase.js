@@ -15,6 +15,7 @@ function makeState() {
     tables: { profiles: [], stamps: [], favorites: [], courses: [], trending_daily: [], spot_forecast_daily: [] },
     nextId: 1,
     pendingFailures: [],   // { table, op, error }
+    holds: {},             // table → 풀릴 때까지 그 테이블 조회를 붙잡아 두는 Promise (로딩 중 화면 검증용)
     log: [],               // { table, op, payload }
   }
 }
@@ -117,7 +118,7 @@ class Builder {
     return { data: out, error: null }
   }
   then(resolve, reject) {
-    return Promise.resolve().then(() => this._run()).then(resolve, reject)
+    return Promise.resolve(state.holds[this.table]).then(() => this._run()).then(resolve, reject)
   }
 }
 
@@ -181,6 +182,12 @@ export const fake = {
     for (const r of rows) state.tables[table].push({ id: state.nextId++, ...r })
   },
   failNext(table, error, op) { state.pendingFailures.push({ table, op, error }) },
+  /** 이 테이블의 응답을 붙잡아 둔다. 돌려준 함수를 부르면 풀린다 */
+  hold(table) {
+    let release
+    state.holds[table] = new Promise(r => { release = r })
+    return () => { delete state.holds[table]; release() }
+  },
   setInitError(msg) { state.initError = msg },
   rows(table) { return state.tables[table] },
   log() { return state.log },

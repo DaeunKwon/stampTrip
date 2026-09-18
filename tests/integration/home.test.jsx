@@ -125,6 +125,18 @@ describe('홈 탭', () => {
     expect(within(passport).getByText('최근 방문지 · 덕수궁')).toBeInTheDocument()
   })
 
+  it('스탬프 조회가 끝나기 전에는 여권 카드에 "첫 스탬프" 문구를 보여주지 않는다', async () => {
+    fake.signIn()
+    fake.seed('stamps', [{ user_id: TEST_USER_ID, content_id: '4001', title: '덕수궁', addr1: '서울', firstimage: '', stamped_at: '2026-09-11T05:00:00.000Z' }])
+    const release = fake.hold('stamps')
+    renderApp({ route: '/' })
+    const passport = await screen.findByRole('link', { name: /스탬프 찍으러 가기/ })
+    expect(within(passport).queryByText('첫 스탬프를 찍어보세요')).not.toBeInTheDocument()
+    expect(within(passport).queryByText('0')).not.toBeInTheDocument()
+    release()
+    expect(await within(passport).findByText('여행이 쌓이고 있어요')).toBeInTheDocument()
+  })
+
   it('요즘 뜨는 명소 데이터가 없으면 섹션 자체를 그리지 않는다', async () => {
     fake.signIn()
     renderApp({ route: '/' })
