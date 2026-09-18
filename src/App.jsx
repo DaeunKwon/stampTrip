@@ -3,6 +3,7 @@ import { Routes, Route, Outlet } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import { ToastProvider } from './components/Toast'
 import ScrollToTop from './components/ScrollToTop'
+import BackButtonHandler from './components/BackButtonHandler'
 import { AuthProvider } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
 import { UserDataProvider } from './store/UserDataProvider'
@@ -43,6 +44,7 @@ export default function App() {
     <AuthProvider>
     <ToastProvider>
     <ScrollToTop />
+    <BackButtonHandler />
     <Routes>
       {/* 공개 */}
       <Route path="/login" element={<Login />} />
