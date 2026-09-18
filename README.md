@@ -23,7 +23,7 @@
 - **카카오맵 API** (지도 · GPS 거리 계산)
 - **Supabase** (카카오 · Google 소셜 로그인, 스탬프 · 관심 목록 · 코스 DB 저장)
 - **PWA** (vite-plugin-pwa — 홈 화면 설치, 서비스워커)
-- **Capacitor 8** (같은 웹 번들을 Android · iOS 앱으로 래핑)
+- **Capacitor 8** (같은 웹 번들을 Android 앱으로 래핑)
 - **Vercel** (웹 호스팅 + "요즘 뜨는 명소" 일일 배치 Cron, 서울 리전)
 - **Vitest + Playwright** (통합테스트 · 웹/Android/iOS E2E)
 
@@ -158,18 +158,8 @@ keytool -genkeypair -keystore android/keystore/stamptrip-release.jks -alias stam
 
 ---
 
-## iOS 앱 (TestFlight)
+## Android 앱 안의 카카오맵
 
-Capacitor 로 감싼 iOS 프로젝트는 `ios/` 에 있습니다(CocoaPods 대신 Swift Package Manager).
-Xcode · Apple Developer Program · App Store Connect 앱 생성 · Xcode 에서 Team 한 번 선택까지 끝나면 아래 한 줄로 TestFlight 에 올라갑니다.
-
-```bash
-npm run ios:open          # Xcode 로 열기 (처음 한 번: Signing & Capabilities 에서 Team 선택)
-npm run ios:testflight    # 웹 빌드 → cap sync → Release 아카이브 → App Store Connect 업로드
-BUILD=2 npm run ios:testflight   # 재업로드 시 빌드번호 지정
-```
-
-전체 절차(계정 가입 · 앱 생성 · 심사자 초대)는 [`store/testflight.md`](store/testflight.md) 참고.
 앱 안에서는 카카오맵 도메인 검사를 피하려고 Referer 를 보내지 않으므로(`src/main.jsx`) 카카오 콘솔에 앱 오리진을 등록할 필요가 없습니다.
 
 ## 배포 & 테스터에게 공유하기 (Vercel)
