@@ -99,28 +99,25 @@
   .passport-shine { display: none; }
 }
 
-/* 첫 진입 인트로: 스플래시 중앙의 큰 아이콘 → 로그인 화면 제자리로 줄어들며 이동 → 문구·버튼 등장 */
+/* 첫 진입 인트로: 빈 스플래시 → 로그인 화면의 아이콘이 제자리에서 통 하고 등장 → 문구·버튼이 아래에서 올라옴 */
 @keyframes intro-pop {
-  from { opacity: 0; transform: scale(2.1); }
-  to { opacity: 1; transform: scale(2.6); }
-}
-@keyframes intro-move {
-  from { transform: translate(var(--intro-dx), var(--intro-dy)) scale(2.6); }
-  to { transform: none; }
+  0% { opacity: 0; transform: scale(0.55); }
+  60% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: none; }
 }
 @keyframes intro-fade-up {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes intro-bg { from { background-color: #111827; } }
-.intro-splash-icon { transform: scale(2.6); animation: intro-pop 0.45s ease-out 0.2s both; }
-.intro-play .intro-icon { animation: intro-move 1.3s cubic-bezier(0.7, 0, 0.2, 1) var(--intro-move-delay) both; }
-.intro-play .intro-fade-1 { animation: intro-fade-up 0.6s ease-out calc(var(--intro-move-delay) + 0.95s) both; }
-.intro-play .intro-fade-2 { animation: intro-fade-up 0.6s ease-out calc(var(--intro-move-delay) + 1.15s) both; }
-/* 다크모드 기기의 앱: 짙은 남색 네이티브 스플래시에서 이어받아 아이콘이 움직이는 동안 흰색으로 밝아진다 */
+.intro-play { --intro-delay: 0.1s; }
+.intro-play .intro-icon { animation: intro-pop 0.55s cubic-bezier(0.3, 0.7, 0.3, 1) var(--intro-delay) both; }
+.intro-play .intro-fade-1 { animation: intro-fade-up 0.6s ease-out calc(var(--intro-delay) + 0.4s) both; }
+.intro-play .intro-fade-2 { animation: intro-fade-up 0.6s ease-out calc(var(--intro-delay) + 0.6s) both; }
+/* 다크모드 기기의 앱: 짙은 남색 네이티브 스플래시에서 이어받아 먼저 흰색으로 밝아진 뒤 아이콘이 등장한다 */
 @media (prefers-color-scheme: dark) {
-  .intro-play.intro-native { animation: intro-bg 1.3s cubic-bezier(0.7, 0, 0.2, 1) var(--intro-move-delay) both; }
+  .intro-play.intro-native { --intro-delay: 0.45s; animation: intro-bg 0.5s ease-out both; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .intro-splash-icon, .intro-play, .intro-play .intro-icon, .intro-play .intro-fade-1, .intro-play .intro-fade-2 { animation: none; }
+  .intro-play, .intro-play .intro-icon, .intro-play .intro-fade-1, .intro-play .intro-fade-2 { animation: none; }
 }

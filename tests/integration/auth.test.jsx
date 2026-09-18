@@ -147,11 +147,11 @@ describe('인증 · 온보딩 흐름', () => {
     expect(await screen.findByText('진행중인 행사/축제')).toBeInTheDocument()
   })
 
-  it('세션 판정 전에는 스플래시(로고)만 보인다', async () => {
+  it('세션 판정 전에는 빈 스플래시만 보인다', async () => {
     let release
     fake.client.auth.initialize.mockImplementationOnce(() => new Promise(r => { release = r }))
     renderApp({ route: '/' })
-    expect(screen.getByRole('img', { name: '스탬프여행' })).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: '스탬프여행 불러오는 중' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /카카오로 시작하기/ })).not.toBeInTheDocument()
     release({ error: null })
     expect(await screen.findByRole('button', { name: /카카오로 시작하기/ })).toBeInTheDocument()

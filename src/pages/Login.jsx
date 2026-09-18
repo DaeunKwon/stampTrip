@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useToast } from '../components/Toast'
@@ -6,7 +6,7 @@ import AppIcon from '../components/AppIcon'
 import Splash from '../components/Splash'
 import { ProviderIcon } from '../components/Provider'
 import { isNativeApp } from '../native/platform'
-import { takeIntroDelay } from '../utils/intro'
+import { takeIntro } from '../utils/intro'
 
 const PROVIDERS = [
   { key: 'kakao',  label: '카카오로 시작하기', pending: '카카오 로그인 중…' },
@@ -18,23 +18,12 @@ export default function Login() {
   const showToast = useToast()
   const location = useLocation()
   const [pending, setPending] = useState(null) // 'kakao' | 'google' | null
-  const rootRef = useRef(null)
-  const iconRef = useRef(null)
-  const [introStyle, setIntroStyle] = useState(null)
+  const [playIntro, setPlayIntro] = useState(false)
 
-  // 앱을 켜고 처음 뜬 로그인 화면이면 인트로 재생: 스플래시의 큰 아이콘(화면 중앙)에서 제자리까지의 거리를 재서 넘긴다
+  // 앱을 켜고 처음 뜬 로그인 화면이면 인트로 재생: 아이콘이 제자리에서 통 하고 등장한 뒤 문구·버튼이 올라온다
   const showingForm = !loading && !session
   useLayoutEffect(() => {
-    if (!showingForm) return
-    const delay = takeIntroDelay()
-    if (delay === null) return
-    const root = rootRef.current.getBoundingClientRect()
-    const icon = iconRef.current.getBoundingClientRect()
-    setIntroStyle({
-      '--intro-dx': `${root.left + root.width / 2 - (icon.left + icon.width / 2)}px`,
-      '--intro-dy': `${root.top + root.height / 2 - (icon.top + icon.height / 2)}px`,
-      '--intro-move-delay': `${Math.round(delay)}ms`,
-    })
+    if (showingForm && takeIntro()) setPlayIntro(true)
   }, [showingForm])
 
   // 네이티브 앱: 시스템 브라우저 인증 시트가 닫히면(완료 또는 사용자가 취소) 버튼 상태를 되돌린다
@@ -103,13 +92,9 @@ export default function Login() {
   }
 
   return (
-    <div
-      ref={rootRef}
-      style={introStyle ?? undefined}
-      className={`max-w-md mx-auto min-h-screen bg-white flex flex-col ${introStyle ? 'intro-play' : ''} ${isNativeApp ? 'intro-native' : ''}`}
-    >
+    <div className={`max-w-md mx-auto min-h-screen bg-white flex flex-col ${playIntro ? 'intro-play' : ''} ${isNativeApp ? 'intro-native' : ''}`}>
       <div className="flex-1 flex flex-col justify-center px-[26px] py-10">
-        <div ref={iconRef} className="intro-icon w-16 h-16">
+        <div className="intro-icon w-16 h-16">
           <AppIcon className="w-16 h-16" />
         </div>
         <h1 className="intro-fade-1 mt-[22px] text-[30px] leading-tight font-extrabold tracking-tight text-gray-900">
