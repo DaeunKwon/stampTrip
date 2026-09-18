@@ -67,7 +67,7 @@ export default function CourseMap({ event, spots, selected = [], onSpotClick, cl
       badge.type = 'button'
       badge.textContent = String(i + 1)
       badge.setAttribute('aria-label', `${i + 1}. ${spot.title}`)
-      badge.style.cssText = 'width:26px;height:26px;border-radius:9999px;border:2px solid #fb923c;background:#fff;color:#ea580c;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;transition:background .15s,color .15s;'
+      badge.style.cssText = 'width:26px;height:26px;border-radius:9999px;border:2px solid #5f86f0;background:#fff;color:#2650c9;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:pointer;transition:background .15s,color .15s;'
       badge.addEventListener('click', e => { e.stopPropagation(); onSpotClickRef.current?.(spot.contentid) })
       badgesRef.current.set(spot.contentid, badge)
       overlaysRef.current.push(new maps.CustomOverlay({ map, position: pos, content: badge, yAnchor: 0.5, zIndex: 3 }))
@@ -83,9 +83,9 @@ export default function CourseMap({ event, spots, selected = [], onSpotClick, cl
     const maps = window.kakao.maps
     badgesRef.current.forEach((badge, id) => {
       const on = selected.includes(id)
-      badge.style.background = on ? '#f97316' : '#fff'
-      badge.style.color = on ? '#fff' : '#ea580c'
-      badge.style.borderColor = on ? '#fff' : '#fb923c'
+      badge.style.background = on ? '#2f5fe0' : '#fff'
+      badge.style.color = on ? '#fff' : '#2650c9'
+      badge.style.borderColor = on ? '#fff' : '#5f86f0'
     })
 
     polylineRef.current?.setMap(null)
@@ -99,7 +99,7 @@ export default function CourseMap({ event, spots, selected = [], onSpotClick, cl
     if (path.length >= 2) {
       polylineRef.current = new maps.Polyline({
         map: mapRef.current, path,
-        strokeWeight: 3, strokeColor: '#f97316', strokeOpacity: 0.9, strokeStyle: 'shortdash',
+        strokeWeight: 3, strokeColor: '#2f5fe0', strokeOpacity: 0.9, strokeStyle: 'shortdash',
       })
     }
   }, [ready, selected, spots, eventLat, eventLng])

@@ -34,14 +34,14 @@ function SealArt({ title, date, idPrefix }) {
         <path id={`${idPrefix}ArcTop`} d="M 26 69 A 43 43 0 0 1 112 69" fill="none" />
       </defs>
       <g filter={`url(#${idPrefix}InkTex)`}>
-        <circle cx="69" cy="69" r="64" fill="none" stroke="#ea580c" strokeWidth="4.5" />
-        <circle cx="69" cy="69" r="53" fill="none" stroke="#ea580c" strokeWidth="1.6" strokeDasharray="5 4" />
-        <text fontSize="9" fontWeight="700" fill="#ea580c" letterSpacing="2.2">
+        <circle cx="69" cy="69" r="64" fill="none" stroke="#2650c9" strokeWidth="4.5" />
+        <circle cx="69" cy="69" r="53" fill="none" stroke="#2650c9" strokeWidth="1.6" strokeDasharray="5 4" />
+        <text fontSize="9" fontWeight="700" fill="#2650c9" letterSpacing="2.2">
           <textPath href={`#${idPrefix}ArcTop`} startOffset="50%" textAnchor="middle">
             STAMP TRIP · KOREA
           </textPath>
         </text>
-        <g fill="#ea580c" transform="translate(41,44)">
+        <g fill="#2650c9" transform="translate(41,44)">
           <path d="M8 16 Q28 2 48 16 L44 16 L44 20 L12 20 L12 16 Z" />
           <rect x="14" y="20" width="28" height="2.5" />
           <path d="M2 30 Q28 16 54 30 L50 30 L50 33 L6 33 L6 30 Z" />
@@ -49,10 +49,10 @@ function SealArt({ title, date, idPrefix }) {
           <rect x="26" y="33" width="4" height="9" />
           <rect x="40" y="33" width="4" height="9" />
         </g>
-        <text x="69" y="105" textAnchor="middle" fontSize={fontSize} fontWeight="800" fill="#ea580c">
+        <text x="69" y="105" textAnchor="middle" fontSize={fontSize} fontWeight="800" fill="#2650c9">
           {label}
         </text>
-        <text x="69" y="117" textAnchor="middle" fontSize="8" fontWeight="600" fill="#ea580c" letterSpacing="1">
+        <text x="69" y="117" textAnchor="middle" fontSize="8" fontWeight="600" fill="#2650c9" letterSpacing="1">
           {date}
         </text>
       </g>

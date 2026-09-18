@@ -5,13 +5,13 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          400: '#fb923c',
-          500: '#f97316',
-          600: '#ea580c',
-          700: '#c2410c',
+          50: '#eef3ff',
+          100: '#dfe8ff',
+          200: '#c0d0ff',
+          400: '#5f86f0',
+          500: '#2f5fe0',
+          600: '#2650c9',
+          700: '#1e46b8',
         },
       },
       fontFamily: {

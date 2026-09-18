@@ -181,7 +181,7 @@ describe('지도 탭 · GPS 스탬프', () => {
     await screen.findByText(`📍 ${FAR_AWAY.lat.toFixed(4)}, ${FAR_AWAY.lng.toFixed(4)}`)
     expect(map.center.getLat()).toBeCloseTo(37.5759, 4)
     // 강조 마커(큰 핀) + 이름 라벨
-    await waitFor(() => expect(fakeMaps.markersOnMap().find(m => m.opts.title === '광화문')?.opts.image.src).toContain('%23ea580c'))
+    await waitFor(() => expect(fakeMaps.markersOnMap().find(m => m.opts.title === '광화문')?.opts.image.src).toContain('%232650c9'))
     expect(fakeMaps.overlays.some(o => o instanceof fakeMaps.CustomOverlay && String(o.opts.content).includes('광화문'))).toBe(true)
   })
 
