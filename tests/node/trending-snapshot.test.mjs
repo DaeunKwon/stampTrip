@@ -4,10 +4,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const upserts = []
 const deletes = []
 let historyRows = []
+let previousRow = null
+let baselineRows = null
+const rpcCalls = []
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
+    // spot_baseline 함수: baselineRows 가 null 이면 "함수 없음" 오류를 돌려준다
+    rpc: (fn, args) => ({
+      range: async (f, t) => {
+        rpcCalls.push({ fn, args })
+        return baselineRows ? { data: baselineRows.slice(f, t + 1), error: null } : { data: null, error: { message: 'Could not find the function public.spot_baseline' } }
+      },
+    }),
     from: table => ({
       select: () => ({
+        order: () => ({ limit: () => ({ maybeSingle: async () => ({ data: previousRow, error: null }) }) }),
         gte: () => ({ lt: () => ({ range: async (f, t) => ({ data: table === 'spot_forecast_daily' ? historyRows.slice(f, t + 1) : [], error: null }) }) }),
       }),
       upsert: async (rows, opts) => { upserts.push({ table, rows, opts }); return { error: null } },
@@ -16,6 +27,7 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }))
 
+process.env.TRENDING_RETRY_MS = '0'   // 429 재시도 대기를 없앤다
 const { runSnapshot } = await import('../../scripts/trending-snapshot.mjs')
 
 function kst(offset) {
@@ -46,7 +58,7 @@ function installFetch(forecastBySigungu, keyword = {}, detail = {}) {
   })
 }
 
-beforeEach(() => { upserts.length = 0; deletes.length = 0; calls.length = 0; historyRows = [] })
+beforeEach(() => { upserts.length = 0; deletes.length = 0; calls.length = 0; historyRows = []; previousRow = null; baselineRows = null; rpcCalls.length = 0 })
 
 describe('runSnapshot', () => {
   it('키가 없으면 바로 실패한다', async () => {
@@ -91,7 +103,7 @@ describe('runSnapshot', () => {
     expect(log[0]).toContain('dry-run')
   })
 
-  it('과거 스냅샷이 14일 이상 쌓인 곳은 저장된 평소값을 기준으로 쓴다', async () => {
+  it('과거 스냅샷이 14일 이상 쌓인 곳은 저장된 평소값을 기준으로 쓴다 (DB 함수가 없으면 원본을 읽어 평균)', async () => {
     historyRows = Array.from({ length: 20 }, (_, i) => ({ spot_key: '11110|북촌한옥마을', rate: 20 }))
     installFetch({ 11110: series('북촌한옥마을', 80, 40) },
       { '북촌한옥마을': [{ contentid: '100', contenttypeid: '12', title: '북촌', addr1: '서울특별시 종로구', firstimage: 'i' }] })
@@ -105,6 +117,19 @@ describe('runSnapshot', () => {
     expect(upserts[0].opts).toEqual({ onConflict: 'base_date,spot_key' })
     expect(upserts[1].rows).toMatchObject({ date: kst(0), items: [expect.objectContaining({ name: '북촌한옥마을' })] })
     expect(deletes).toEqual([{ table: 'spot_forecast_daily', col: 'base_date', v: kst(-56) }])
+  })
+
+  it('평소값은 DB 함수 spot_baseline 의 집계 결과를 쓰고, 원본 표는 읽지 않는다', async () => {
+    baselineRows = [{ spot_key: '11110|북촌한옥마을', mean: '25.00', n: 30 }, { spot_key: '11110|삼청동길', mean: '10', n: 5 }]   // 삼청동은 14일 미만 → 30일 예보 평균 사용
+    historyRows = [{ spot_key: '11110|북촌한옥마을', rate: 99 }]   // 읽히면 안 되는 값
+    installFetch({ 11110: [...series('북촌한옥마을', 80, 40), ...series('삼청동길', 70, 50)] },
+      { '북촌한옥마을': [{ contentid: '100', contenttypeid: '12', title: '북촌', addr1: '서울특별시 종로구', firstimage: 'i' }] })
+    const log = []
+    const r = await runSnapshot({ tourApiKey: 'k', supabaseUrl: 'https://x.supabase.co', serviceKey: 's', limit: 1, log: m => log.push(m) })
+    expect(rpcCalls[0]).toEqual({ fn: 'spot_baseline', args: { since: kst(-56), until: kst(-7) } })
+    expect(r.items[0]).toMatchObject({ name: '북촌한옥마을', usedHistory: true, baseRate: 25, score: 3.2 })
+    expect(log.some(m => m.includes('DB 집계'))).toBe(true)
+    expect(log.some(m => m.includes('원본을 읽어'))).toBe(false)
   })
 
   it('관광정보 매칭은 이름 변형(괄호·시도 접두어 제거)을 순서대로 시도하고, 같은 시군구 주소 + 사진이 있어야 채택한다', async () => {
@@ -131,6 +156,58 @@ describe('runSnapshot', () => {
 
     installFetch({ 11110: { __error: 'SERVICE KEY IS NOT REGISTERED' }, 11140: { __http: 500 } })
     await expect(runSnapshot({ tourApiKey: 'k', dryRun: true, limit: 2 })).rejects.toThrow('수집된 예보가 없습니다')
+  })
+
+  it('지역별 순위: 전국 순위 뒤에 지역 순위에만 드는 곳을 덧붙이고, region·regionRank 를 단다 (한 시군구는 지역 순위에서 2자리까지)', async () => {
+    const spot = (id, title, addr1) => [{ contentid: id, contenttypeid: '12', title, addr1, firstimage: `https://img/${id}.jpg` }]
+    // 종로구(11110): 북촌 1.92 · 삼청동 1.28 · 인사동 1.18   /   중구(11140): 명동 1.62
+    installFetch({
+      11110: [...series('북촌한옥마을', 80, 30), ...series('삼청동길', 70, 50), ...series('인사동', 66, 53)],
+      11140: series('명동거리', 60, 30),
+    }, {
+      '북촌한옥마을': spot('100', '북촌한옥마을', '서울특별시 종로구 계동길'),
+      '삼청동길': spot('101', '삼청동길', '서울특별시 종로구 삼청로'),
+      '인사동': spot('102', '인사동', '서울특별시 종로구 인사동길'),
+      '명동거리': spot('201', '명동거리', '서울특별시 중구 명동길'),
+    })
+    const r = await runSnapshot({ tourApiKey: 'k', dryRun: true, limit: 2 })
+    // 전국(시군구당 1곳) 2곳이 앞, 지역 순위에만 드는 삼청동이 뒤. 인사동은 종로구 3번째라 빠진다
+    expect(r.items.map(i => [i.name, i.rank, i.region, i.regionRank])).toEqual([
+      ['북촌한옥마을', 1, '서울', 1],
+      ['명동거리', 2, '서울', 2],
+      ['삼청동길', null, '서울', 3],
+    ])
+    expect(r.regions).toMatchObject({ 서울: 3, 부산: 0, 제주: 0 })
+    // 전국·지역에 모두 드는 곳은 한 번만 찾는다
+    expect(calls.filter(c => c.path.endsWith('searchKeyword2')).map(c => c.p.keyword).sort()).toEqual(['명동거리', '북촌한옥마을', '삼청동길'])
+  })
+
+  it('이전 저장분에 있던 명소는 관광정보를 다시 찾지 않고 그대로 쓴다', async () => {
+    previousRow = { items: [{ name: '북촌한옥마을', signguCd: '11110', contentId: '100', title: '북촌한옥마을', addr1: '서울특별시 종로구', firstimage: 'https://img/100.jpg', description: '어제 설명' }] }
+    installFetch({ 11110: series('북촌한옥마을', 80, 30) }, {})
+    const r = await runSnapshot({ tourApiKey: 'k', supabaseUrl: 'https://x.supabase.co', serviceKey: 's', limit: 1 })
+    expect(r.items).toHaveLength(1)
+    expect(r.items[0]).toMatchObject({ rank: 1, region: '서울', regionRank: 1, contentId: '100', description: '어제 설명' })
+    expect(calls.some(c => c.path.endsWith('searchKeyword2') || c.path.endsWith('detailCommon2'))).toBe(false)
+  })
+
+  it('429(요청 과다)는 잠시 쉬었다가 다시 시도하고, 끝내 안 되면 그 시군구만 실패로 센다', async () => {
+    installFetch({ 11110: series('북촌한옥마을', 80, 30), 11140: series('명동거리', 60, 30) },
+      { '북촌한옥마을': [{ contentid: '100', contenttypeid: '12', title: '북촌', addr1: '서울특별시 종로구', firstimage: 'i' }] })
+    const real = global.fetch
+    const hits = {}
+    global.fetch = vi.fn(async url => {
+      const sg = new URL(url).searchParams.get('signguCd')
+      hits[sg] = (hits[sg] ?? 0) + 1
+      if (sg === '11110' && hits[sg] <= 2) return new Response('too many', { status: 429 })   // 두 번 막힌 뒤 성공
+      if (sg === '11140') return new Response('too many', { status: 429 })                     // 계속 막힘
+      return real(url)
+    })
+    const r = await runSnapshot({ tourApiKey: 'k', dryRun: true, limit: 2 })
+    expect(hits['11110']).toBe(3)
+    expect(hits['11140']).toBe(7)   // 첫 시도 + 재시도 6번
+    expect(r.failed).toBe(1)
+    expect(r.items.map(i => i.name)).toEqual(['북촌한옥마을'])
   })
 
   it('후보는 있지만 관광정보 매칭이 전부 실패하면 오류로 끝난다', async () => {

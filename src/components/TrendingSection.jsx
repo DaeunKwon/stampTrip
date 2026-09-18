@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getTrendingSpots } from '../api/trending'
+import { REGIONS } from '../data/regions'
 
 const HOME_COUNT = 5
 
@@ -32,36 +33,123 @@ function Skeleton() {
   )
 }
 
+// 배치가 region 을 달기 전에 저장된 행은 시도 이름으로 지역을 가린다
+const REGION_BY_AREA_NM = {
+  서울특별시: '서울', 인천광역시: '인천', 대전광역시: '대전', 대구광역시: '대구', 광주광역시: '광주', 부산광역시: '부산',
+  강원특별자치도: '강원', 경기도: '경기', 전북특별자치도: '전북', 전라남도: '전남', 제주특별자치도: '제주',
+}
+
+/** 전국: 전국 순위(rank) 순 · 지역: 그 지역 안 순위(regionRank) 순, 없으면 점수순 */
+export function pickTrending(all, region) {
+  if (region === '전국') {
+    return all.filter(s => s.rank != null).sort((a, b) => a.rank - b.rank).slice(0, HOME_COUNT)
+  }
+  return all
+    .filter(s => (s.region ?? REGION_BY_AREA_NM[s.areaNm]) === region)
+    .sort((a, b) => (a.regionRank ?? Infinity) - (b.regionRank ?? Infinity) || (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, HOME_COUNT)
+}
+
+/** 제목 줄 오른쪽의 지역 선택 버튼 — 누르면 바로 아래로 목록이 펼쳐진다 */
+function RegionSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef(null)
+
+  // 바깥을 누르거나 ESC 를 누르면 닫는다
+  useEffect(() => {
+    if (!open) return
+    const onDown = e => { if (!wrapRef.current?.contains(e.target)) setOpen(false) }
+    const onKey = e => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const filtered = value !== '전국'
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        aria-label={`지역 선택: ${value}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-1 pl-3 pr-2.5 py-1.5 rounded-full border text-[12.5px] font-semibold transition-colors ${
+          filtered ? 'bg-primary-50 border-primary-200 text-primary-600' : 'bg-white border-gray-200 text-gray-700'
+        }`}
+      >
+        {value}
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          className={`w-3.5 h-3.5 fill-none transition-transform ${open ? 'rotate-180' : ''} ${filtered ? 'stroke-primary-500' : 'stroke-gray-400'}`}
+          strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          role="listbox"
+          aria-label="지역"
+          className="absolute right-0 top-full mt-1.5 z-10 w-32 max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-2xl shadow-xl p-1.5"
+        >
+          {REGIONS.map(r => (
+            <li key={r.label} role="option" aria-selected={r.label === value}>
+              <button
+                type="button"
+                onClick={() => { onChange(r.label); setOpen(false) }}
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-[13px] ${
+                  r.label === value ? 'bg-primary-50 text-primary-600 font-bold' : 'text-gray-700 font-medium active:bg-gray-50'
+                }`}
+              >
+                {r.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 /**
- * 홈 "요즘 뜨는 명소" — 순위 · 사진 · 이름 · 지역 · 한 줄 설명 (B안)
+ * 홈 "요즘 뜨는 명소" — 순위 · 사진 · 이름 · 지역 · 한 줄 설명 (B안) + 지역 선택
  * 항목을 누르면 onSelect(contentId) 로 행사 카드와 같은 상세 팝업을 연다.
  * 데이터가 없으면(배치 미실행·Supabase 미설정) 섹션 자체를 그리지 않는다.
  */
 export default function TrendingSection({ onSelect }) {
-  const [items, setItems] = useState([])
+  const [all, setAll] = useState([])
   const [loading, setLoading] = useState(true)
+  const [region, setRegion] = useState('전국')
 
   useEffect(() => {
     getTrendingSpots()
-      .then(list => setItems(list.slice(0, HOME_COUNT)))
-      .catch(() => setItems([]))
+      .then(setAll)
+      .catch(() => setAll([]))
       .finally(() => setLoading(false))
   }, [])
 
-  if (!loading && items.length === 0) return null
+  if (!loading && all.length === 0) return null
+  const items = pickTrending(all, region)
 
   return (
     <section className="mb-8">
-      <div className="mb-3">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-base font-bold text-gray-800">요즘 뜨는 명소</h2>
-        <p className="text-[11px] text-gray-400 mt-0.5">한국관광공사 방문 예보 기준 · 오늘 갱신</p>
-        <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
-          KT 통신 데이터로 관광지별 방문자 수를 예측한 자료예요. 평소보다 사람이 늘 것으로 예보된 곳을 골랐어요.
-        </p>
+        {!loading && <RegionSelect value={region} onChange={setRegion} />}
       </div>
 
       {loading ? (
         <Skeleton />
+      ) : items.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 px-4 py-7 text-center">
+          <p className="text-[13px] text-gray-500">이번 주 {region}에서 뜨는 명소가 아직 없어요</p>
+          <p className="text-[11.5px] text-gray-400 mt-1">다른 지역을 선택해보세요</p>
+        </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
           {items.map((spot, i) => (
@@ -98,6 +186,12 @@ export default function TrendingSection({ onSelect }) {
           ))}
         </div>
       )}
+
+      <p className="text-[11px] text-gray-400 mt-2.5 px-0.5 leading-relaxed">
+        한국관광공사 방문 예보 기준 · 오늘 갱신
+        <br />
+        KT 통신 데이터로 관광지별 방문자 수를 예측한 자료예요. 평소보다 사람이 늘 것으로 예보된 곳을 골랐어요.
+      </p>
     </section>
   )
 }

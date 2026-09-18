@@ -27,7 +27,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true, date: r.date, seconds: Math.round((Date.now() - started) / 1000),
       spots: r.spots, failed: r.failed, candidates: r.candidates,
-      items: r.items.map(i => ({ rank: i.rank, name: i.name, region: `${i.areaNm} ${i.signguNm}`, score: i.score })),
+      regions: r.regions,
+      items: r.items.map(i => ({ rank: i.rank, name: i.name, region: `${i.areaNm} ${i.signguNm}`, regionRank: i.regionRank && `${i.region} ${i.regionRank}`, score: i.score })),
       logs,
     })
   } catch (e) {

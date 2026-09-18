@@ -4,23 +4,9 @@ import BenefitCard from '../components/BenefitCard'
 import DetailModal from '../components/DetailModal'
 import Pagination from '../components/Pagination'
 import { getOngoingFestivals } from '../api/tourApi'
+import { REGIONS as AREA_CODES } from '../data/regions'
 
 const ITEMS_PER_PAGE = 6
-
-const AREA_CODES = [
-  { code: '',   label: '전국' },
-  { code: '1',  label: '서울' },
-  { code: '2',  label: '인천' },
-  { code: '3',  label: '대전' },
-  { code: '4',  label: '대구' },
-  { code: '5',  label: '광주' },
-  { code: '6',  label: '부산' },
-  { code: '32', label: '강원' },
-  { code: '31', label: '경기' },
-  { code: '37', label: '전북' },
-  { code: '38', label: '전남' },
-  { code: '39', label: '제주' },
-]
 
 function SkeletonCard() {
   return <div className="bg-gray-100 rounded-2xl h-52 animate-pulse" />

@@ -105,6 +105,7 @@ grant execute on function public.delete_my_account() to authenticated;
 --    spot_forecast_daily : 관광지별 당일 집중률 예보를 매일 쌓아 "평소" 기준으로 쓴다 (8주치만 보관)
 --    trending_daily      : 그날의 결과 목록. 홈 화면은 최신 행 하나만 읽는다
 --    items: [{ rank, name, areaNm, signguNm, score, contentId, title, addr1, firstimage, description, ... }]
+--           앞쪽은 전국 1~10위(rank), 그 뒤는 지역 순위에만 드는 곳(rank: null). 항목마다 region('서울'…, src/data/regions.js) · regionRank(1~5)
 -- ─────────────────────────────────────────────
 create table if not exists public.spot_forecast_daily (
   base_date   text not null,          -- YYYYMMDD
@@ -128,3 +129,20 @@ alter table public.trending_daily      enable row level security;
 drop policy if exists "trending_daily: public read" on public.trending_daily;
 create policy "trending_daily: public read" on public.trending_daily
   for select using (true);
+
+-- 관광지별 "평소" 집중률(기간 평균)과 쌓인 일수. 배치가 8주치 원본(수십만 줄)을 내려받지 않고 결과(관광지 수만큼)만 받는다.
+-- 이 함수가 없으면 배치는 원본을 1,000줄씩 읽는 예전 방식으로 동작한다 (느림).
+create or replace function public.spot_baseline(since text, until text)
+returns table (spot_key text, mean numeric, n integer)
+language sql
+stable
+as $$
+  select f.spot_key, avg(f.rate), count(*)::int
+  from public.spot_forecast_daily f
+  where f.base_date >= since and f.base_date < until
+  group by f.spot_key
+  order by f.spot_key
+$$;
+
+revoke all on function public.spot_baseline(text, text) from public, anon, authenticated;
+grant execute on function public.spot_baseline(text, text) to service_role;
