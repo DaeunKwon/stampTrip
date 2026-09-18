@@ -29,7 +29,7 @@ describe('주변 코스 스팟 → 내 코스 만들기', () => {
   it('기준 행사 정보 없이 직접 진입하면 코스 탭으로 돌려보낸다', async () => {
     fake.signIn()
     renderApp({ route: '/course/nearby' })
-    expect(await screen.findByRole('heading', { name: '행사·축제 정보' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '전국 행사·축제' })).toBeInTheDocument()
   })
 
   it('명소가 없으면 안내 문구만 보이고 하단 바가 없다', async () => {

@@ -60,8 +60,8 @@ export default function Course() {
   return (
     <div className="pt-6">
       <div className="px-4 mb-4">
-        <h1 className="text-xl font-bold text-gray-900">행사·축제 정보</h1>
-        <p className="text-xs text-gray-500 mt-0.5">관심있는 행사•축제를 선택하고 코스를 짜보세요</p>
+        <h1 className="text-xl font-bold text-gray-900">전국 행사·축제</h1>
+        <p className="text-xs text-gray-500 mt-0.5">마음에 드는 행사를 골라 나만의 코스를 짜보세요</p>
       </div>
 
       {/* 지역 필터 */}

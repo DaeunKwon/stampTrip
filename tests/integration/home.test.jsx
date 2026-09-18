@@ -107,12 +107,21 @@ describe('홈 탭', () => {
     await waitFor(() => expect(screen.queryByText('정보를 불러올 수 없습니다')).not.toBeInTheDocument())
   })
 
-  it('상단에 내 스탬프 현황(여권 카드)을 보여주고, 누르면 스탬프 컬렉션으로 간다', async () => {
+  it('상단에 내 스탬프 현황(여권 카드)을 보여주고, 도장이 없으면 지도 탭으로 · 있으면 스탬프 컬렉션으로 간다', async () => {
     fake.signIn()
     renderApp({ route: '/' })
     const passport = await screen.findByRole('link', { name: /첫 도장을 찍어보세요/ })
-    expect(passport).toHaveAttribute('href', '/my/stamps')
+    expect(passport).toHaveAttribute('href', '/map')
     expect(within(passport).getByText('첫 도장을 찍어보세요')).toBeInTheDocument()
+  })
+
+  it('도장이 있으면 여권 카드에 최근 도장을 보여주고 스탬프 컬렉션으로 간다', async () => {
+    fake.signIn()
+    fake.seed('stamps', [{ user_id: TEST_USER_ID, content_id: '4001', title: '덕수궁', addr1: '서울', firstimage: '', stamped_at: '2026-09-11T05:00:00.000Z' }])
+    renderApp({ route: '/' })
+    const passport = await screen.findByRole('link', { name: /여행이 쌓이고 있어요/ })
+    expect(passport).toHaveAttribute('href', '/my/stamps')
+    expect(within(passport).getByText('최근 · 덕수궁')).toBeInTheDocument()
   })
 
   it('요즘 뜨는 명소 데이터가 없으면 섹션 자체를 그리지 않는다', async () => {
