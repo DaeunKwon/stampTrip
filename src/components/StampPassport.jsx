@@ -13,13 +13,12 @@ export default function StampPassport() {
       className="flex items-center justify-between bg-slate-900 text-white rounded-[20px] p-[18px] active:scale-[0.99] transition-transform"
     >
       <div className="min-w-0">
-        <p className="text-[10px] tracking-[0.18em] text-slate-400">STAMP PASSPORT</p>
-        <p className={`font-extrabold leading-tight mt-1.5 mb-2.5 whitespace-nowrap ${count > 0 ? 'text-[26px]' : 'text-xl'}`}>
+        <p className={`font-extrabold leading-tight mb-2.5 whitespace-nowrap ${count > 0 ? 'text-[26px]' : 'text-xl'}`}>
           {count > 0 ? `${count}곳 방문` : '첫 도장을 찍어보세요'}
         </p>
         <p className="text-[11.5px] text-slate-300 leading-relaxed">
           {latest?.title && <span className="block truncate">최근 · {latest.title}</span>}
-          {count > 0 ? '다음 도장을 찍으러 가볼까요?' : '관광지에 도착하면 지도 탭에서 받을 수 있어요'}
+          {count > 0 ? '다음 도장을 찍으러 가볼까요?' : '도장을 찍으러 가볼까요?'}
         </p>
       </div>
       <div

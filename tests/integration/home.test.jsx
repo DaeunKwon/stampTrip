@@ -110,7 +110,7 @@ describe('홈 탭', () => {
   it('상단에 내 스탬프 현황(여권 카드)을 보여주고, 누르면 스탬프 컬렉션으로 간다', async () => {
     fake.signIn()
     renderApp({ route: '/' })
-    const passport = await screen.findByRole('link', { name: /STAMP PASSPORT/ })
+    const passport = await screen.findByRole('link', { name: /첫 도장을 찍어보세요/ })
     expect(passport).toHaveAttribute('href', '/my/stamps')
     expect(within(passport).getByText('첫 도장을 찍어보세요')).toBeInTheDocument()
   })
