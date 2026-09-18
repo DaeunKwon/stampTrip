@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { supabase, isSupabaseConfigured } from '../api/supabase'
 import { isNativeApp } from '../native/platform'
 import { openNativeOAuth, listenAuthDeepLink } from '../native/auth'
@@ -25,12 +25,16 @@ function pickUserInfo(user) {
  * 로그인 세션 + 프로필(닉네임) 상태를 앱 전체에 제공한다.
  * - session/user: Supabase 세션 (없으면 비로그인)
  * - profile: public.profiles 행 (없으면 첫 가입 → 닉네임 설정 필요)
- * - loading: 앱 시작 직후 세션/프로필 판정이 끝나기 전 (스플래시 표시용)
+ * - loading: 세션/프로필 판정이 끝나기 전 — 앱 시작 직후, 그리고 새로 로그인해 프로필을 조회하는 동안 (스플래시 표시용)
  */
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  // 새로 로그인한 사용자의 프로필을 조회하는 중 — 이때의 profile=null 을 "첫 가입"으로 오판하지 않도록 구분한다
+  const [profileLoading, setProfileLoading] = useState(false)
+  // 지금 profile 상태가 어느 사용자 기준으로 판정된 것인지
+  const profileUserId = useRef(null)
   // 소셜 인증 후 돌아왔을 때 세션 생성에 실패한 이유 (로그인 화면에서 토스트로 안내)
   const [initError, setInitError] = useState(null)
 
@@ -58,8 +62,13 @@ export function AuthProvider({ children }) {
       const { data: { session } } = await supabase.auth.getSession()
       if (cancelled) return
       setSession(session)
-      if (session?.user) setProfile(await loadProfile(session.user.id))
-      if (!cancelled) setLoading(false)
+      if (session?.user && profileUserId.current !== session.user.id) {
+        const loaded = await loadProfile(session.user.id)
+        if (cancelled) return
+        profileUserId.current = session.user.id
+        setProfile(loaded)
+      }
+      setLoading(false)
     })
 
     // 이후: 로그인/로그아웃/토큰 갱신 시 세션 동기화
@@ -67,11 +76,21 @@ export function AuthProvider({ children }) {
       if (cancelled) return
       setSession(nextSession)
       if (event === 'SIGNED_OUT' || !nextSession?.user) {
+        profileUserId.current = null
         setProfile(null)
         return
       }
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        setProfile(await loadProfile(nextSession.user.id))
+        // 다른(새) 사용자로 바뀐 경우에만 조회가 끝날 때까지 스플래시로 가린다.
+        // 같은 사용자의 SIGNED_IN(탭 복귀 등)은 화면을 유지한 채 조용히 갱신한다.
+        const userId = nextSession.user.id
+        const isNewUser = profileUserId.current !== userId
+        if (isNewUser) setProfileLoading(true)
+        const loaded = await loadProfile(userId)
+        if (cancelled) return
+        profileUserId.current = userId
+        setProfile(loaded)
+        if (isNewUser) setProfileLoading(false)
       }
     })
 
@@ -107,6 +126,7 @@ export function AuthProvider({ children }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
+    profileUserId.current = null
     setSession(null)
     setProfile(null)
   }, [])
@@ -144,13 +164,14 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.rpc('delete_my_account')
     if (error) throw error
     await supabase.auth.signOut()
+    profileUserId.current = null
     setSession(null)
     setProfile(null)
   }, [])
 
   const value = useMemo(() => ({
     isConfigured: isSupabaseConfigured,
-    loading,
+    loading: loading || profileLoading,
     initError,
     clearInitError: () => setInitError(null),
     session,
@@ -162,7 +183,7 @@ export function AuthProvider({ children }) {
     createProfile,
     updateNickname,
     deleteAccount,
-  }), [loading, initError, session, profile, signInWith, signOut, createProfile, updateNickname, deleteAccount])
+  }), [loading, profileLoading, initError, session, profile, signInWith, signOut, createProfile, updateNickname, deleteAccount])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

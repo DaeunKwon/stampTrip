@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderApp } from '../helpers/render'
@@ -98,6 +98,47 @@ describe('인증 · 온보딩 흐름', () => {
     fake.signIn()
     renderApp({ route: '/onboarding' })
     expect(await screen.findByRole('link', { name: /첫 스탬프를 찍어보세요/ })).toBeInTheDocument()
+  })
+
+  it('프로필이 있는 사용자가 새로 로그인하면 온보딩을 거치지 않고 바로 홈으로 간다', async () => {
+    renderApp({ route: '/login' })
+    await screen.findByRole('button', { name: /카카오로 시작하기/ })
+
+    // 프로필 조회가 끝나기 전의 profile=null 을 "첫 가입"으로 오판해 온보딩이 잠깐 뜨는지 감시한다
+    let sawOnboarding = false
+    const observer = new MutationObserver(() => {
+      if (document.body.textContent.includes('거의 다 됐어요')) sawOnboarding = true
+    })
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true })
+
+    // 실제 네트워크처럼 프로필 조회가 늦게 끝나게 한다 (세션은 있는데 프로필은 아직 모르는 구간을 만든다)
+    const from = fake.client.from
+    const spy = vi.spyOn(fake.client, 'from').mockImplementation(table => {
+      const builder = from(table)
+      if (table !== 'profiles') return builder
+      const run = builder.then.bind(builder)
+      builder.then = (resolve, reject) => new Promise(r => setTimeout(r, 80)).then(() => run(resolve, reject))
+      return builder
+    })
+
+    // 소셜 인증을 마치고 돌아옴 (네이티브 딥링크처럼 페이지가 살아 있는 채로 SIGNED_IN 이 온다)
+    fake.signIn()
+    fake.state.listeners.forEach(cb => cb('SIGNED_IN', fake.state.session))
+
+    expect(await screen.findByText('진행중인 행사/축제')).toBeInTheDocument()
+    observer.disconnect()
+    spy.mockRestore()
+    expect(sawOnboarding).toBe(false)
+  })
+
+  it('첫 가입자가 새로 로그인하면 프로필 조회가 끝난 뒤 온보딩에 머문다', async () => {
+    renderApp({ route: '/login' })
+    await screen.findByRole('button', { name: /카카오로 시작하기/ })
+    fake.signIn({ profile: null })
+    fake.state.listeners.forEach(cb => cb('SIGNED_IN', fake.state.session))
+    expect(await screen.findByText('거의 다 됐어요')).toBeInTheDocument()
+    await new Promise(r => setTimeout(r, 50))
+    expect(screen.getByText('거의 다 됐어요')).toBeInTheDocument()
   })
 
   it('로그인 상태에서 /login 에 오면 홈으로 보낸다', async () => {
