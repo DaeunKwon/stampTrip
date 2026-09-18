@@ -51,9 +51,9 @@ describe('지도 탭 · GPS 스탬프', () => {
     expect(await screen.findByText('📍 근처 관광지 발견!')).toBeInTheDocument()
     expect(screen.getByText('덕수궁')).toBeInTheDocument()   // 목록 첫 번째 미인증 반경 내 관광지
 
-    await user.click(screen.getByRole('button', { name: '🗺️ 스탬프 찍기' }))
+    await user.click(screen.getByRole('button', { name: '스탬프 찍기' }))
     // 연출 중에는 하단 패널이 사라지고 배너가 뜬다
-    await waitFor(() => expect(screen.queryByRole('button', { name: '🗺️ 스탬프 찍기' })).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByRole('button', { name: '스탬프 찍기' })).not.toBeInTheDocument())
     expect(await screen.findByText('방문 인증됨', {}, { timeout: 3000 })).toBeInTheDocument()
     expect(screen.getByText(/1번째 스탬프/)).toBeInTheDocument()
     expect(screen.getByText('🗺️ 1개 수집')).toBeInTheDocument()
@@ -63,7 +63,7 @@ describe('지도 탭 · GPS 스탬프', () => {
 
     // 연출이 끝나면(3.2초) 다음 미인증 관광지(청계광장) 팝업이 이어진다
     expect(await screen.findByText('청계광장', {}, { timeout: 4500 })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '🗺️ 스탬프 찍기' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '스탬프 찍기' })).toBeInTheDocument()
     // 덕수궁 마커는 인증 완료(회색 체크) 이미지로 바뀐다
     const deoksugung = fakeMaps.markersOnMap().find(m => m.opts.title === '덕수궁')
     expect(deoksugung.opts.image.src).toContain('%23374151')
@@ -82,7 +82,7 @@ describe('지도 탭 · GPS 스탬프', () => {
     expect(await screen.findByText('📍 선택한 관광지')).toBeInTheDocument()
     expect(screen.getByText(new RegExp(`현재 위치에서 \\d+m · 반경 ${STAMP_RADIUS}m 밖`))).toBeInTheDocument()
     expect(screen.getByText('🔒 가까이 가면 인증할 수 있어요')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '🗺️ 스탬프 찍기' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '스탬프 찍기' })).not.toBeInTheDocument()
   })
 
   it('이미 인증한 관광지는 자동 팝업 대상에서 빠지고, 선택하면 "이미 인증" 상태로 보인다', async () => {
@@ -119,7 +119,7 @@ describe('지도 탭 · GPS 스탬프', () => {
     fake.failNext('stamps', { code: '42501', message: 'RLS' }, 'insert')
     overrideTour('locationBasedList2', MAP_SPOTS)
     await openMapWithGps()
-    await user.click(await screen.findByRole('button', { name: '🗺️ 스탬프 찍기' }))
+    await user.click(await screen.findByRole('button', { name: '스탬프 찍기' }))
     expect(await screen.findByText('저장에 실패했어요. 다시 시도해 주세요')).toBeInTheDocument()
     await waitFor(() => expect(screen.getByText('🗺️ 0개 수집')).toBeInTheDocument())
     expect(fake.rows('stamps')).toHaveLength(0)
@@ -131,7 +131,7 @@ describe('지도 탭 · GPS 스탬프', () => {
     fake.failNext('stamps', { code: '23505', message: 'duplicate' }, 'insert')
     overrideTour('locationBasedList2', MAP_SPOTS)
     await openMapWithGps()
-    await user.click(await screen.findByRole('button', { name: '🗺️ 스탬프 찍기' }))
+    await user.click(await screen.findByRole('button', { name: '스탬프 찍기' }))
     await new Promise(r => setTimeout(r, 200))
     expect(screen.getByText('🗺️ 1개 수집')).toBeInTheDocument()
     expect(screen.queryByText('저장에 실패했어요. 다시 시도해 주세요')).not.toBeInTheDocument()
@@ -190,6 +190,5 @@ describe('지도 탭 · GPS 스탬프', () => {
     loadKakaoMapMock.mockRejectedValueOnce(new Error('VITE_KAKAO_MAP_KEY 환경 변수가 설정되지 않았습니다.'))
     renderApp({ route: '/map' })
     expect(await screen.findByText('지도를 불러올 수 없습니다')).toBeInTheDocument()
-    expect(screen.getByText('VITE_KAKAO_MAP_KEY 환경 변수가 설정되지 않았습니다.')).toBeInTheDocument()
   })
 })

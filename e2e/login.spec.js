@@ -39,7 +39,7 @@ test.describe('로그인 화면', () => {
   test('첫 가입자는 온보딩에서 닉네임을 정한 뒤 홈으로 들어간다', async ({ page }, testInfo) => {
     const { db } = await installBackend(page, { profile: null })
     await page.goto('/')
-    await expect(page.getByText('거의 다 됐어요 🎉')).toBeVisible()
+    await expect(page.getByText('거의 다 됐어요')).toBeVisible()
     const input = page.getByPlaceholder('2~12자')
     await expect(input).toHaveValue('테스터')
     await input.fill('여행자')

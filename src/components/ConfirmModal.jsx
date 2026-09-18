@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 /** 확인/취소 팝업. DeleteAccountModal 과 같은 틀. */
-export default function ConfirmModal({ icon = '🗑️', title, message, confirmLabel = '확인', danger = false, onConfirm, onClose }) {
+export default function ConfirmModal({ title, message, confirmLabel = '확인', danger = false, onConfirm, onClose }) {
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
@@ -20,7 +20,6 @@ export default function ConfirmModal({ icon = '🗑️', title, message, confirm
         className="relative w-full max-w-[280px] bg-white rounded-[20px] px-5 pt-6 pb-4 text-center animate-[slideUp_0.25s_ease-out]"
         onClick={e => e.stopPropagation()}
       >
-        <p className="text-4xl mb-2.5">{icon}</p>
         <h3 className="text-[15px] font-extrabold text-gray-900 mb-1.5">{title}</h3>
         {message && <p className="text-xs text-gray-500 leading-relaxed mb-5">{message}</p>}
         <button

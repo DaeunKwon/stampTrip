@@ -16,7 +16,7 @@ test.describe('지도 탭 · GPS 스탬프', () => {
 
     await expect(page.getByText('📍 근처 관광지 발견!')).toBeVisible()
     await shot(page, testInfo, '09-map-popup')
-    await page.getByRole('button', { name: '🗺️ 스탬프 찍기' }).click()
+    await page.getByRole('button', { name: '스탬프 찍기' }).click()
     await expect(page.getByText('방문 인증됨')).toBeVisible()
     await expect(page.getByText(/1번째 스탬프/)).toBeVisible()
     await shot(page, testInfo, '10-stamp-ceremony')
@@ -25,7 +25,7 @@ test.describe('지도 탭 · GPS 스탬프', () => {
     expect(db.rows('stamps')[0]).toMatchObject({ user_id: TEST_USER_ID, content_id: '4001', title: '덕수궁' })
 
     // 연출이 끝나면 다음 미인증 관광지(청계광장) 팝업이 이어진다
-    await expect(page.getByRole('button', { name: '🗺️ 스탬프 찍기' })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: '스탬프 찍기' })).toBeVisible({ timeout: 10000 })
     await expect(page.getByText('청계광장')).toBeVisible()
 
     await page.getByRole('navigation').getByRole('link', { name: 'My' }).click()

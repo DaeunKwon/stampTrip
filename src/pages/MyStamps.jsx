@@ -1,10 +1,10 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import useStamp from '../hooks/useStamp'
 import StampBadge from '../components/StampBadge'
 import SubHeader from '../components/SubHeader'
 import ConfirmModal from '../components/ConfirmModal'
 import { useToast } from '../components/Toast'
-import { STAMP_RADIUS } from './Map'
 
 /** My 탭 › 스탬프 컬렉션: 스탬프 그리드 + 방문 기록 타임라인 */
 export default function MyStamps() {
@@ -45,11 +45,13 @@ export default function MyStamps() {
       <div className="px-4 mt-5">
         {stamps.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-6xl mb-5">🗺️</p>
             <p className="text-gray-600 font-medium">여행을 시작해보세요!</p>
-            <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-              지도 탭에서 관광지 반경 {STAMP_RADIUS}m 내에<br />들어가면 스탬프를 찍을 수 있습니다
-            </p>
+            <Link
+              to="/map"
+              className="mt-6 px-6 py-3 rounded-full bg-primary-500 text-white text-sm font-bold shadow-md shadow-primary-200 active:scale-95 transition-transform"
+            >
+              스탬프 찍으러 가기
+            </Link>
           </div>
         ) : (
           <>

@@ -236,10 +236,7 @@ export default function Map() {
       {mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center px-6">
-            <p className="text-4xl mb-3">🗺️</p>
-            <p className="font-bold text-gray-700 mb-1">지도를 불러올 수 없습니다</p>
-            <p className="text-xs text-gray-500">{mapError}</p>
-            <p className="text-xs text-gray-400 mt-2">.env 파일에 VITE_KAKAO_MAP_KEY를 입력하세요</p>
+            <p className="font-bold text-gray-700">지도를 불러올 수 없습니다</p>
           </div>
         </div>
       )}
@@ -322,7 +319,7 @@ export default function Map() {
                   onClick={handleStamp}
                   className="w-full py-3.5 bg-primary-500 text-white rounded-xl text-sm font-bold shadow-md shadow-primary-200 active:scale-95 transition-transform"
                 >
-                  🗺️ 스탬프 찍기
+                  스탬프 찍기
                 </button>
               </>
             ) : (

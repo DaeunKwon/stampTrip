@@ -8,6 +8,7 @@ import CourseMap from '../components/CourseMap'
 import SubHeader from '../components/SubHeader'
 import { courseDistance, formatCourseTotal } from '../components/CourseSheet'
 import { formatCourseDate, visitedCount } from './MyCourses'
+import { FlagIcon } from '../components/Icons'
 
 /** My 탭 › 내 코스 › 코스 상세: 지도 + 순서별 스팟 + 방문 진행 */
 export default function CourseDetail() {
@@ -80,7 +81,7 @@ export default function CourseDetail() {
       {/* 진행률 */}
       <div className="mx-4 mt-3.5 px-3.5 py-3 bg-primary-50 border border-primary-100 rounded-xl">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-primary-700 font-semibold">{complete ? '🎉 코스를 완주했어요!' : '방문 진행'}</span>
+          <span className="text-primary-700 font-semibold inline-flex items-center gap-1.5">{complete && <FlagIcon className="w-4 h-4" />}{complete ? '코스를 완주했어요!' : '방문 진행'}</span>
           <span className="text-primary-600 font-bold tabular-nums">{done}/{total}</span>
         </div>
         <div className="mt-2 h-1.5 rounded-full bg-white overflow-hidden">

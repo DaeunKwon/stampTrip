@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import useFavorite from '../hooks/useFavorite'
 import BenefitCard, { calcDday } from '../components/BenefitCard'
 import DetailModal from '../components/DetailModal'
@@ -60,11 +60,13 @@ export default function MyFavorites() {
       <div className="px-4 mt-5">
         {favorites.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-6xl mb-5">🧡</p>
             <p className="text-gray-600 font-medium">아직 관심 목록이 없습니다</p>
-            <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-              코스 탭에서 하트를 눌러<br />행사를 저장해 보세요
-            </p>
+            <Link
+              to="/course"
+              className="mt-6 px-6 py-3 rounded-full bg-primary-500 text-white text-sm font-bold shadow-md shadow-primary-200 active:scale-95 transition-transform"
+            >
+              축제 보러 가기
+            </Link>
           </div>
         ) : (
           <>

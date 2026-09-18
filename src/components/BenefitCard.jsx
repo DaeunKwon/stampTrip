@@ -40,7 +40,7 @@ export default function BenefitCard({ benefit, onClick }) {
       firstimage: firstimage ?? '',
       eventenddate,
     })
-    showToast(added ? '🧡 관심 목록에 추가했습니다' : '관심 목록에서 해제했습니다')
+    showToast(added ? '관심 목록에 추가했습니다' : '관심 목록에서 해제했습니다')
   }
 
   return (

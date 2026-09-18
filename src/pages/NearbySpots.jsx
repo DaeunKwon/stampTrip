@@ -168,7 +168,6 @@ export default function NearbySpots() {
           </>
         ) : (
           <div className="text-center py-20">
-            <p className="text-5xl mb-3">🧭</p>
             <p className="text-gray-500 font-medium">주변 1km 내 명소가 없습니다</p>
           </div>
         )}

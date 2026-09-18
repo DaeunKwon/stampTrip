@@ -55,7 +55,7 @@ describe('내 코스', () => {
     fake.signIn()
     renderApp({ route: '/my/courses' })
     expect(await screen.findByText('아직 만든 코스가 없어요')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '코스 탭으로 가기' })).toHaveAttribute('href', '/course')
+    expect(screen.getByRole('link', { name: '코스 짜러 가기' })).toHaveAttribute('href', '/course')
   })
 
   it('방문 진행률을 스탬프와 맞춰 보여주고, 전부 찍으면 완주로 표시한다', async () => {
@@ -75,7 +75,7 @@ describe('내 코스', () => {
     renderApp({ route: '/my/courses' })
     await user.click(await screen.findByRole('link', { name: /시청 한 바퀴/ }))
     expect(await screen.findByRole('heading', { name: '시청 한 바퀴' })).toBeInTheDocument()
-    expect(screen.getByText('🎉 코스를 완주했어요!')).toBeInTheDocument()
+    expect(screen.getByText('코스를 완주했어요!')).toBeInTheDocument()
     expect(screen.getByText('2/2')).toBeInTheDocument()
     expect(screen.getAllByText('✓ 방문')).toHaveLength(2)
 
@@ -139,6 +139,7 @@ describe('스탬프 컬렉션', () => {
     await user.click(await screen.findByRole('button', { name: '모두 삭제' }))
     expect(await screen.findByText('스탬프를 모두 삭제했어요')).toBeInTheDocument()
     expect(await screen.findByText('여행을 시작해보세요!')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '스탬프 찍으러 가기' })).toHaveAttribute('href', '/map')
     await waitFor(() => expect(fake.rows('stamps')).toHaveLength(0))
   })
 

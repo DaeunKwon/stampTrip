@@ -41,7 +41,7 @@ describe('홈 탭', () => {
     fake.signIn()
     overrideTour('searchFestival2', { __http: 500 })
     renderApp({ route: '/' })
-    expect(await screen.findByText('API 키를 설정하면 행사 정보가 표시됩니다')).toBeInTheDocument()
+    expect(await screen.findByText('진행중인 행사/축제가 없습니다.')).toBeInTheDocument()
   })
 
   it('하트를 누르면 관심 목록에 저장되고(팝업은 열리지 않음) 다시 누르면 해제된다', async () => {
@@ -51,7 +51,7 @@ describe('홈 탭', () => {
     await screen.findByText('서울 빛초롱 축제')
     const [heart] = screen.getAllByRole('button', { name: '관심 추가' })
     await user.click(heart)
-    expect(await screen.findByText('🧡 관심 목록에 추가했습니다')).toBeInTheDocument()
+    expect(await screen.findByText('관심 목록에 추가했습니다')).toBeInTheDocument()
     expect(screen.queryByText('불러오는 중...')).not.toBeInTheDocument()
     await waitFor(() => expect(fake.rows('favorites')).toHaveLength(1))
     expect(fake.rows('favorites')[0]).toMatchObject({ user_id: TEST_USER_ID, content_id: '3001', title: '서울 빛초롱 축제', event_end_date: ymd(2) })

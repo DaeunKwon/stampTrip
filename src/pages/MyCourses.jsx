@@ -3,6 +3,7 @@ import useCourse from '../hooks/useCourse'
 import useStamp from '../hooks/useStamp'
 import SubHeader from '../components/SubHeader'
 import { courseDistance, formatCourseTotal } from '../components/CourseSheet'
+import { FlagIcon } from '../components/Icons'
 
 export function formatCourseDate(iso) {
   const d = new Date(iso)
@@ -26,16 +27,13 @@ export default function MyCourses() {
       <div className="px-4 mt-5">
         {courses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-6xl mb-5">🧭</p>
             <p className="text-gray-600 font-medium">아직 만든 코스가 없어요</p>
-            <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-              코스 탭에서 행사를 고르고<br />'주변 코스 스팟 보기'에서 가고 싶은 곳을 체크해 보세요
-            </p>
+            <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">행사를 고르고 나만의 코스를 짜보세요</p>
             <Link
               to="/course"
               className="mt-6 px-6 py-3 rounded-full bg-primary-500 text-white text-sm font-bold shadow-md shadow-primary-200 active:scale-95 transition-transform"
             >
-              코스 탭으로 가기
+              코스 짜러 가기
             </Link>
           </div>
         ) : (
@@ -63,7 +61,7 @@ export default function MyCourses() {
                       <div className="h-full bg-primary-500 rounded-full" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
                     </div>
                     <span className="text-[11px] font-bold text-primary-600 tabular-nums flex-shrink-0">
-                      {complete ? '완주 🎉' : `${done}/${total} 방문`}
+                      {complete ? <span className="inline-flex items-center gap-1"><FlagIcon className="w-3.5 h-3.5" />완주</span> : `${done}/${total} 방문`}
                     </span>
                   </div>
                   <p className="text-[10.5px] text-gray-400 mt-1.5">{total}곳 · {formatCourseTotal(courseDistance(course.event, course.spots))}</p>

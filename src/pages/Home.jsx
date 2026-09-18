@@ -83,9 +83,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-dashed border-gray-200 py-10 text-center">
-            <p className="text-3xl mb-2">🎁</p>
-            <p className="text-sm text-gray-400">API 키를 설정하면 행사 정보가 표시됩니다</p>
-            <p className="text-xs text-gray-300 mt-1">.env 파일에 VITE_TOUR_API_KEY를 입력하세요</p>
+            <p className="text-sm text-gray-400">진행중인 행사/축제가 없습니다.</p>
           </div>
         )}
       </section>

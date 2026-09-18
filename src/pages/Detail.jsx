@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getDetailCommon, getDetailImage } from '../api/tourApi'
 import useStamp from '../hooks/useStamp'
 import StampBadge from '../components/StampBadge'
+import { AlertIcon } from '../components/Icons'
 
 function stripHtml(str = '') {
   return str.replace(/<[^>]*>/g, '').trim()
@@ -144,7 +145,7 @@ export default function Detail() {
           </>
         ) : (
           <div className="text-center py-20">
-            <p className="text-4xl mb-3">😞</p>
+            <AlertIcon className="w-10 h-10 mx-auto mb-3 text-gray-400" />
             <p className="text-gray-500">상세 정보를 불러올 수 없습니다</p>
           </div>
         )}

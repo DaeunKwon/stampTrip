@@ -52,7 +52,7 @@ describe('인증 · 온보딩 흐름', () => {
     fake.signIn({ user: makeUser({ name: '권다은' }), profile: null })
     renderApp({ route: '/archive' })
 
-    expect(await screen.findByText('거의 다 됐어요 🎉')).toBeInTheDocument()
+    expect(await screen.findByText('거의 다 됐어요')).toBeInTheDocument()
     expect(screen.getByText('카카오 계정으로 연결됨')).toBeInTheDocument()
     const input = screen.getByPlaceholderText('2~12자')
     expect(input).toHaveValue('권다은')        // 소셜 이름이 기본값
@@ -91,7 +91,7 @@ describe('인증 · 온보딩 흐름', () => {
     renderApp({ route: '/onboarding' })
     await user.click(await screen.findByRole('button', { name: '시작하기' }))
     expect(await screen.findByText('저장에 실패했어요. 다시 시도해 주세요')).toBeInTheDocument()
-    expect(screen.getByText('거의 다 됐어요 🎉')).toBeInTheDocument()
+    expect(screen.getByText('거의 다 됐어요')).toBeInTheDocument()
   })
 
   it('프로필이 이미 있으면 온보딩·로그인 화면 대신 홈으로 간다', async () => {

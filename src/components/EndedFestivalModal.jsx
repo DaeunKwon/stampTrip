@@ -27,7 +27,6 @@ export default function EndedFestivalModal({ item, onRemove, onClose }) {
         className="relative w-full max-w-[280px] bg-white rounded-[20px] px-5 pt-6 pb-4 text-center animate-[slideUp_0.25s_ease-out]"
         onClick={e => e.stopPropagation()}
       >
-        <p className="text-4xl mb-2.5">📅</p>
         <h3 className="text-[15px] font-extrabold text-gray-900 mb-1.5">종료된 행사입니다</h3>
         <p className="text-xs text-gray-500 leading-relaxed mb-5">
           <span className="font-semibold text-gray-600">{item.title}</span>의<br />

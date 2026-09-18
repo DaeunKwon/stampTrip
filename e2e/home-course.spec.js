@@ -26,7 +26,7 @@ test.describe('홈 → 상세 → 주변 코스 스팟 → 내 코스', () => {
     const { db } = await installBackend(page)
     await page.goto('/')
     await page.getByRole('button', { name: '관심 추가', exact: true }).first().click()
-    await expect(page.getByText('🧡 관심 목록에 추가했습니다')).toBeVisible()
+    await expect(page.getByText('관심 목록에 추가했습니다')).toBeVisible()
     await expect.poll(() => db.rows('favorites').length).toBe(1)
     expect(db.rows('favorites')[0]).toMatchObject({ user_id: TEST_USER_ID, content_id: '3001' })
     await page.getByRole('navigation').getByRole('link', { name: 'My' }).click()

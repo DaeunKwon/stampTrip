@@ -4,6 +4,7 @@ import { getDetailCommon, getDetailIntro } from '../api/tourApi'
 import useFavorite from '../hooks/useFavorite'
 import useBodyScrollLock from '../hooks/useBodyScrollLock'
 import { useToast } from './Toast'
+import { AlertIcon } from './Icons'
 
 // HTML 태그/엔티티 정리 (<br> → 줄바꿈, 나머지 태그 제거, 엔티티 디코드)
 function cleanHtml(str = '') {
@@ -110,7 +111,7 @@ export default function DetailModal({ contentId, onClose }) {
                 firstimage: detail.firstimage ?? '',
                 eventenddate: intro?.eventenddate,
               })
-              showToast(added ? '🧡 관심 목록에 추가했습니다' : '관심 목록에서 해제했습니다')
+              showToast(added ? '관심 목록에 추가했습니다' : '관심 목록에서 해제했습니다')
             }}
             aria-label={isFavorite(detail.contentid) ? '관심 해제' : '관심 추가'}
             className={`absolute top-3 right-14 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow text-[17px] leading-none active:scale-90 transition-transform ${
@@ -140,7 +141,7 @@ export default function DetailModal({ contentId, onClose }) {
           </div>
         ) : error ? (
           <div className="py-24 text-center px-6">
-            <p className="text-4xl mb-3">😞</p>
+            <AlertIcon className="w-10 h-10 mx-auto mb-3 text-gray-400" />
             <p className="text-gray-500">정보를 불러올 수 없습니다</p>
           </div>
         ) : detail ? (
