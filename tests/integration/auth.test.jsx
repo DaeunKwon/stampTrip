@@ -151,7 +151,7 @@ describe('인증 · 온보딩 흐름', () => {
     let release
     fake.client.auth.initialize.mockImplementationOnce(() => new Promise(r => { release = r }))
     renderApp({ route: '/' })
-    expect(screen.getByText('여행지에서 도장 찍고, 기록을 남겨요')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '스탬프여행' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /카카오로 시작하기/ })).not.toBeInTheDocument()
     release({ error: null })
     expect(await screen.findByRole('button', { name: /카카오로 시작하기/ })).toBeInTheDocument()

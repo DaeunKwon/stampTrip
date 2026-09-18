@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useToast } from '../components/Toast'
-import BrandMark from '../components/BrandMark'
+import AppIcon from '../components/AppIcon'
 import Splash from '../components/Splash'
 import { ProviderIcon } from '../components/Provider'
 import { isNativeApp } from '../native/platform'
+import { takeIntroDelay } from '../utils/intro'
 
 const PROVIDERS = [
   { key: 'kakao',  label: '카카오로 시작하기', pending: '카카오 로그인 중…' },
@@ -17,6 +18,24 @@ export default function Login() {
   const showToast = useToast()
   const location = useLocation()
   const [pending, setPending] = useState(null) // 'kakao' | 'google' | null
+  const rootRef = useRef(null)
+  const iconRef = useRef(null)
+  const [introStyle, setIntroStyle] = useState(null)
+
+  // 앱을 켜고 처음 뜬 로그인 화면이면 인트로 재생: 스플래시의 큰 아이콘(화면 중앙)에서 제자리까지의 거리를 재서 넘긴다
+  const showingForm = !loading && !session
+  useLayoutEffect(() => {
+    if (!showingForm) return
+    const delay = takeIntroDelay()
+    if (delay === null) return
+    const root = rootRef.current.getBoundingClientRect()
+    const icon = iconRef.current.getBoundingClientRect()
+    setIntroStyle({
+      '--intro-dx': `${root.left + root.width / 2 - (icon.left + icon.width / 2)}px`,
+      '--intro-dy': `${root.top + root.height / 2 - (icon.top + icon.height / 2)}px`,
+      '--intro-move-delay': `${Math.round(delay)}ms`,
+    })
+  }, [showingForm])
 
   // 네이티브 앱: 시스템 브라우저 인증 시트가 닫히면(완료 또는 사용자가 취소) 버튼 상태를 되돌린다
   useEffect(() => {
@@ -84,52 +103,66 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col justify-center px-6 pb-10">
-      <div className="mb-12">
-        <BrandMark />
+    <div
+      ref={rootRef}
+      style={introStyle ?? undefined}
+      className={`max-w-md mx-auto min-h-screen bg-white flex flex-col ${introStyle ? 'intro-play' : ''} ${isNativeApp ? 'intro-native' : ''}`}
+    >
+      <div className="flex-1 flex flex-col justify-center px-[26px] py-10">
+        <div ref={iconRef} className="intro-icon w-16 h-16">
+          <AppIcon className="w-16 h-16" />
+        </div>
+        <h1 className="intro-fade-1 mt-[22px] text-[30px] leading-tight font-extrabold tracking-tight text-gray-900">
+          여행지마다<br />
+          <span className="text-primary-500">도장 하나씩,</span><br />
+          스탬프여행
+        </h1>
+        <p className="intro-fade-1 mt-2.5 text-[13px] text-gray-500">여행지에서 도장 찍고, 기록을 남겨요</p>
       </div>
 
-      <div className="flex flex-col gap-2.5">
-        {PROVIDERS.map(({ key, label, pending: pendingLabel }) => {
-          const isPending = pending === key
-          const disabled = pending !== null
-          const base = 'w-full py-3.5 rounded-xl text-[13.5px] font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:active:scale-100 disabled:opacity-60'
-          const style = key === 'kakao'
-            ? 'bg-[#FEE500] text-[#191919]'
-            : 'bg-white text-gray-900 border border-gray-200'
-          return (
-            <button
-              key={key}
-              type="button"
-              disabled={disabled}
-              onClick={() => handleSignIn(key)}
-              className={`${base} ${style}`}
-            >
-              {isPending ? (
-                <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-r-transparent animate-spin" />
-              ) : (
-                <ProviderIcon provider={key} />
-              )}
-              {isPending ? pendingLabel : label}
-            </button>
-          )
-        })}
-      </div>
+      <div className="intro-fade-2 px-[22px] pb-[calc(26px+env(safe-area-inset-bottom,0px))]">
+        <div className="flex flex-col gap-2.5">
+          {PROVIDERS.map(({ key, label, pending: pendingLabel }) => {
+            const isPending = pending === key
+            const disabled = pending !== null
+            const base = 'w-full h-[50px] rounded-[14px] text-[13.5px] font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:active:scale-100 disabled:opacity-60'
+            const style = key === 'kakao'
+              ? 'bg-[#FEE500] text-[#191919]'
+              : 'bg-white text-gray-900 border border-gray-200'
+            return (
+              <button
+                key={key}
+                type="button"
+                disabled={disabled}
+                onClick={() => handleSignIn(key)}
+                className={`${base} ${style}`}
+              >
+                {isPending ? (
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-r-transparent animate-spin" />
+                ) : (
+                  <ProviderIcon provider={key} />
+                )}
+                {isPending ? pendingLabel : label}
+              </button>
+            )
+          })}
+        </div>
 
-      <p className="text-center text-[10.5px] text-gray-400 leading-relaxed mt-5">
-        시작하면 만 14세 이상이며{' '}
-        <Link to="/terms" className="text-primary-600 font-semibold">이용약관</Link>
-        {' '}및{' '}
-        <Link to="/privacy" className="text-primary-600 font-semibold">개인정보처리방침</Link>
-        에<br />동의하는 것으로 간주됩니다
-      </p>
-
-      {!isConfigured && (
-        <p className="text-center text-[11px] text-red-400 mt-6 leading-relaxed">
-          Supabase 환경변수(VITE_SUPABASE_URL / ANON_KEY)가 없어<br />
-          로그인이 동작하지 않아요. <span className="font-semibold">docs/SUPABASE_SETUP.md</span> 참고
+        <p className="text-center text-[10.5px] text-gray-400 leading-relaxed mt-4">
+          시작하면 만 14세 이상이며{' '}
+          <Link to="/terms" className="text-primary-600 font-semibold">이용약관</Link>
+          {' '}및{' '}
+          <Link to="/privacy" className="text-primary-600 font-semibold">개인정보처리방침</Link>
+          에<br />동의하는 것으로 간주됩니다
         </p>
-      )}
+
+        {!isConfigured && (
+          <p className="text-center text-[11px] text-red-400 mt-6 leading-relaxed">
+            Supabase 환경변수(VITE_SUPABASE_URL / ANON_KEY)가 없어<br />
+            로그인이 동작하지 않아요. <span className="font-semibold">docs/SUPABASE_SETUP.md</span> 참고
+          </p>
+        )}
+      </div>
     </div>
   )
 }
