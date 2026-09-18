@@ -70,7 +70,7 @@ describe('인증 · 온보딩 흐름', () => {
 
     // 저장된 닉네임이 My 탭 프로필 카드에 보인다
     await user.click(screen.getByRole('link', { name: /My/ }))
-    expect(await screen.findByRole('heading', { name: 'My 탭' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '내 정보' })).toBeInTheDocument()
     expect(screen.getByText('여행자')).toBeInTheDocument()
   })
 

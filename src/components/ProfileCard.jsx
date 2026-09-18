@@ -15,7 +15,7 @@ export default function ProfileCard({ courseCount, stampCount, favoriteCount }) 
 
   return (
     <div className="px-4">
-      <h1 className="text-xl font-bold text-gray-900">My 탭</h1>
+      <h1 className="text-xl font-bold text-gray-900">내 정보</h1>
 
       <div className="mt-3 bg-white border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3">
         <Avatar url={profile?.avatar_url ?? user?.socialAvatar} />

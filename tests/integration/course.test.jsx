@@ -63,7 +63,7 @@ describe('코스 탭 (행사·축제 목록)', () => {
     await screen.findByRole('heading', { name: '행사·축제 정보' })
     const nav = screen.getByRole('navigation')
     await user.click(within(nav).getByRole('link', { name: /My/ }))
-    expect(await screen.findByRole('heading', { name: 'My 탭' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '내 정보' })).toBeInTheDocument()
     await user.click(within(nav).getByRole('link', { name: /홈/ }))
     expect(await screen.findByText('진행중인 행사/축제')).toBeInTheDocument()
     await user.click(within(nav).getByRole('link', { name: /지도/ }))

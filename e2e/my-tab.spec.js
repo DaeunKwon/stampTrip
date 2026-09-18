@@ -9,7 +9,7 @@ test.describe('My 탭 · 계정', () => {
     db.seed('favorites', [{ user_id: TEST_USER_ID, content_id: '3001', title: '서울 빛초롱 축제', addr1: '서울', firstimage: '', event_end_date: '20991231', saved_at: '2026-09-11T05:00:00.000Z' }])
     const { authLog } = await installBackend(page, { db })
     await page.goto('/archive')
-    await expect(page.getByRole('heading', { name: 'My 탭' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '내 정보' })).toBeVisible()
     await expect(page.getByText('테스터')).toBeVisible()
     await expect(page.getByText('2026년 8월부터 함께')).toBeVisible()
     await expect(page.getByText(/v0\.1\.0/)).toBeVisible()
