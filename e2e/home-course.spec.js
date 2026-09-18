@@ -7,7 +7,7 @@ test.describe('홈 → 상세 → 주변 코스 스팟 → 내 코스', () => {
     await installBackend(page)
     await page.goto('/')
     await expect(page.getByRole('heading', { name: '서울 빛초롱 축제', level: 3 })).toBeVisible()
-    await expect(page.getByRole('link', { name: /첫 도장을 찍어보세요/ })).toBeVisible()
+    await expect(page.getByRole('link', { name: /첫 스탬프를 찍어보세요/ })).toBeVisible()
     const events = page.locator('section', { hasText: '진행중인 행사/축제' })
     await expect(events.getByRole('heading', { level: 3 })).toHaveCount(5)
     await expect(events.getByRole('link', { name: '전체보기' })).toHaveAttribute('href', '/course')

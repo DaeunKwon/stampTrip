@@ -45,7 +45,7 @@ test.describe('로그인 화면', () => {
     await input.fill('여행자')
     await shot(page, testInfo, '02-onboarding')
     await page.getByRole('button', { name: '시작하기' }).click()
-    await expect(page.getByRole('link', { name: /첫 도장을 찍어보세요/ })).toBeVisible()
+    await expect(page.getByRole('link', { name: /첫 스탬프를 찍어보세요/ })).toBeVisible()
     expect(db.rows('profiles')).toEqual([expect.objectContaining({ nickname: '여행자' })])
   })
 })

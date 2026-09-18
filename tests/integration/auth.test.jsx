@@ -65,7 +65,7 @@ describe('인증 · 온보딩 흐름', () => {
     await user.click(screen.getByRole('button', { name: '시작하기' }))
 
     // 세션이 이미 있는 채로 들어온 경우 from 이 없어 홈으로 간다 (from 은 비로그인 → /login 리다이렉트 때만 실린다)
-    expect(await screen.findByRole('link', { name: /첫 도장을 찍어보세요/ })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /첫 스탬프를 찍어보세요/ })).toBeInTheDocument()
     expect(fake.rows('profiles')).toEqual([expect.objectContaining({ id: TEST_USER_ID, nickname: '여행자', avatar_url: null })])
 
     // 저장된 닉네임이 My 탭 프로필 카드에 보인다
@@ -97,7 +97,7 @@ describe('인증 · 온보딩 흐름', () => {
   it('프로필이 이미 있으면 온보딩·로그인 화면 대신 홈으로 간다', async () => {
     fake.signIn()
     renderApp({ route: '/onboarding' })
-    expect(await screen.findByRole('link', { name: /첫 도장을 찍어보세요/ })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /첫 스탬프를 찍어보세요/ })).toBeInTheDocument()
   })
 
   it('로그인 상태에서 /login 에 오면 홈으로 보낸다', async () => {
