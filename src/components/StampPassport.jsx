@@ -20,17 +20,20 @@ export default function StampPassport() {
           <p className="text-[11.5px] text-slate-300 leading-relaxed mt-2.5 truncate">최근 방문지 · {latest.title}</p>
         )}
         {/* 카드 전체가 링크라 버튼 모양만 낸다 — 누를 수 있다는 표시 */}
-        <span className="inline-flex items-center gap-1 mt-3.5 px-3.5 py-2 rounded-full bg-primary-500 text-[12.5px] font-bold">
+        <span className="relative overflow-hidden inline-flex items-center gap-1 mt-3.5 px-3.5 py-2 rounded-full bg-primary-500 text-[12.5px] font-bold">
           스탬프 찍으러 가기
-          <svg viewBox="0 0 24 24" aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="passport-arrow w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 6l6 6-6 6" />
           </svg>
+          <span aria-hidden="true" className="passport-shine" />
         </span>
       </div>
       <div
         aria-hidden="true"
-        className="shrink-0 w-[100px] h-[100px] ml-3 mr-1.5 rounded-full border-[3px] border-primary-400 outline-dashed outline-[1.5px] outline-offset-4 outline-primary-400 flex flex-col items-center justify-center -rotate-[14deg] text-primary-200 text-[11px] font-extrabold leading-tight"
+        className="relative shrink-0 w-[100px] h-[100px] ml-3 mr-1.5 rounded-full border-[3px] border-primary-400 flex flex-col items-center justify-center -rotate-[14deg] text-primary-200 text-[11px] font-extrabold leading-tight"
       >
+        {/* 바깥 점선 고리 — 아주 천천히 돈다 (움직임은 index.css 의 passport-*) */}
+        <span className="passport-ring absolute -inset-2 rounded-full border-[1.5px] border-dashed border-primary-400" />
         <span className="text-[26px] text-white leading-none">{count}</span>
         STAMPS
       </div>
