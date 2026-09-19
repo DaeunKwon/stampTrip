@@ -144,3 +144,46 @@ describe('홈 탭', () => {
     await waitFor(() => expect(screen.queryByText('요즘 뜨는 명소')).not.toBeInTheDocument())
   })
 })
+
+describe('홈 내 코스', () => {
+  const SPOTS = [
+    { contentid: '4002', title: '청계광장', addr1: '서울', firstimage: '', mapx: '126.9780', mapy: '37.5690' },
+    { contentid: '4001', title: '덕수궁', addr1: '서울', firstimage: '', mapx: '126.9750', mapy: '37.5658' },
+  ]
+  function seedCourses(n) {
+    fake.seed('courses', Array.from({ length: n }, (_, i) => ({
+      user_id: TEST_USER_ID, name: `코스 ${i + 1}`, event_content_id: '3001', event_title: '서울 빛초롱 축제',
+      event_mapx: '126.9780', event_mapy: '37.5665', spots: SPOTS, created_at: `2026-09-1${i}T03:00:00.000Z`,
+    })))
+  }
+  const section = () => screen.getByRole('heading', { level: 2, name: /내 코스/ }).closest('section')
+
+  it('코스가 없으면 빈 안내와 코스 탭으로 가는 버튼을 보여준다', async () => {
+    fake.signIn()
+    renderApp({ route: '/' })
+    expect(await screen.findByText('아직 만든 코스가 없어요')).toBeInTheDocument()
+    expect(within(section()).getByRole('link', { name: '코스 짜러 가기' })).toHaveAttribute('href', '/course')
+  })
+
+  it('3개까지는 전부 보여주고 모두 보기 버튼은 없다 · 방문 진행도를 표시한다', async () => {
+    fake.signIn()
+    seedCourses(3)
+    fake.seed('stamps', [{ user_id: TEST_USER_ID, content_id: '4001', title: '덕수궁', addr1: '서울', firstimage: '', stamped_at: '2026-09-11T05:00:00.000Z' }])
+    renderApp({ route: '/' })
+    await screen.findByText('코스 1')
+    const links = within(section()).getAllByRole('link')
+    expect(links).toHaveLength(3)
+    expect(links[0]).toHaveAttribute('href', `/my/courses/${fake.rows('courses').find(c => c.name === '코스 3').id}`)   // 최근에 만든 순
+    expect(within(section()).getAllByText('1/2 방문')).toHaveLength(3)
+    expect(within(section()).queryByRole('link', { name: /모두 보기/ })).not.toBeInTheDocument()
+  })
+
+  it('4개부터는 최근 3개와 모두 보기 버튼(→ My 탭 내 코스)을 보여준다', async () => {
+    fake.signIn()
+    seedCourses(4)
+    renderApp({ route: '/' })
+    await screen.findByText('코스 4')
+    expect(within(section()).queryByText('코스 1')).not.toBeInTheDocument()
+    expect(within(section()).getByRole('link', { name: '코스 4개 모두 보기' })).toHaveAttribute('href', '/my/courses')
+  })
+})

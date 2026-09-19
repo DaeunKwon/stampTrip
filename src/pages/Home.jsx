@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import EventSlideCard from '../components/EventSlideCard'
 import StampPassport from '../components/StampPassport'
+import HomeCourses from '../components/HomeCourses'
 import AppIcon from '../components/AppIcon'
 import DetailModal from '../components/DetailModal'
 import TrendingSection from '../components/TrendingSection'
@@ -53,6 +54,9 @@ export default function Home() {
       <section className="mb-7">
         <StampPassport />
       </section>
+
+      {/* 내 코스 */}
+      <HomeCourses />
 
       {/* 행사/축제 섹션 */}
       <section className="mb-8">
