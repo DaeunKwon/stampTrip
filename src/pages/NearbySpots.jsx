@@ -23,7 +23,7 @@ export default function NearbySpots() {
   const navigate = useNavigate()
   const showToast = useToast()
   const { addCourse } = useCourse()
-  const { contentId, title, mapx, mapy } = state ?? {}
+  const { contentId, title, mapx, mapy, isEvent = true } = state ?? {}
   const [spots, setSpots] = useState([])
   const [loading, setLoading] = useState(true)
   // 선택한 명소 contentid — 배열 순서가 곧 코스 순서
@@ -85,7 +85,7 @@ export default function NearbySpots() {
 
   return (
     <div className="pt-6 pb-24">
-      <SubHeader title="주변 코스 스팟" subtitle={`${title} 주변 명소 추천`} />
+      <SubHeader title="나만의 코스 짜기" subtitle={`${title} 주변 명소 추천`} />
 
       {/* 기준 행사 안내 */}
       <div className="mx-4 mt-3.5 px-3.5 py-2.5 bg-primary-50 border border-primary-100 rounded-xl text-xs text-primary-700 leading-relaxed">
@@ -99,7 +99,7 @@ export default function NearbySpots() {
       {!loading && spots.length > 0 && (
         <div className="mx-4 mt-3.5">
           <CourseMap event={event} spots={spots} selected={selected} onSpotClick={toggle} />
-          <p className="mt-1.5 text-[10.5px] text-gray-400 text-right">★ 행사 위치 · 숫자는 아래 목록 순번</p>
+          <p className="mt-1.5 text-[10.5px] text-gray-400 text-right">★ {isEvent ? '행사' : '출발'} 위치 · 숫자는 아래 목록 순번</p>
         </div>
       )}
 

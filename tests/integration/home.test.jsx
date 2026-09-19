@@ -86,8 +86,8 @@ describe('홈 탭', () => {
     expect(screen.getByText('청계광장')).toBeInTheDocument()
     expect(screen.getByText('17:00~22:00')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '📍 주변 코스 스팟 보기' }))
-    expect(await screen.findByRole('heading', { name: '주변 코스 스팟' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '📍 나만의 코스 짜기' }))
+    expect(await screen.findByRole('heading', { name: '나만의 코스 짜기' })).toBeInTheDocument()
     expect(screen.getByText('서울 빛초롱 축제 주변 명소 추천')).toBeInTheDocument()
   })
 

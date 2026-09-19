@@ -45,8 +45,8 @@ test.describe('홈 → 상세 → 주변 코스 스팟 → 내 코스', () => {
     // 팝업이 떠 있는 동안 body 스크롤 잠금
     await expect(page.locator('body')).toHaveCSS('position', 'fixed')
 
-    await page.getByRole('button', { name: '📍 주변 코스 스팟 보기' }).click()
-    await expect(page.getByRole('heading', { name: '주변 코스 스팟' })).toBeVisible()
+    await page.getByRole('button', { name: '📍 나만의 코스 짜기' }).click()
+    await expect(page.getByRole('heading', { name: '나만의 코스 짜기' })).toBeVisible()
     await expect(page.locator('body')).not.toHaveCSS('position', 'fixed')
     await expect(page.getByText('주변 명소 3곳')).toBeVisible()
     await expect(page.locator('[data-kakao-map-stub]')).toBeVisible()
@@ -65,7 +65,7 @@ test.describe('홈 → 상세 → 주변 코스 스팟 → 내 코스', () => {
     await shot(page, testInfo, '05-nearby-selected')
 
     await page.getByRole('button', { name: '코스 만들기' }).click()
-    await expect(page.getByRole('heading', { name: '나만의 코스' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '나만의 코스', exact: true })).toBeVisible()
     const name = page.getByRole('textbox', { name: '코스 이름' })
     await expect(name).toHaveValue('서울 빛초롱 축제 코스')
     await name.fill('시청 산책')

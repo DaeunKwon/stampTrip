@@ -256,7 +256,7 @@ export default function DetailModal({ contentId, onClose }) {
               )}
             </div>
 
-            {/* 주변 코스 스팟 보기 — 스크롤과 무관하게 팝업 하단 고정 */}
+            {/* 나만의 코스 짜기(주변 코스 스팟 화면으로) — 스크롤과 무관하게 팝업 하단 고정 */}
             <div className="sticky bottom-0 px-4 pb-4 pt-5 bg-gradient-to-t from-white via-white to-white/0">
               <button
                 type="button"
@@ -267,12 +267,14 @@ export default function DetailModal({ contentId, onClose }) {
                       title: detail.title,
                       mapx: detail.mapx,
                       mapy: detail.mapy,
+                      // 행사(15)가 아닌 관광지에서 출발하면 지도 설명을 '출발 위치'로 바꾼다
+                      isEvent: String(detail.contenttypeid) === '15',
                     },
                   })
                 }
                 className="w-full py-3 rounded-full bg-primary-500 text-white text-[15px] font-bold shadow-lg shadow-primary-500/30 active:scale-[0.97] transition-transform"
               >
-                📍 주변 코스 스팟 보기
+                📍 나만의 코스 짜기
               </button>
             </div>
           </>

@@ -26,6 +26,15 @@ describe('주변 코스 스팟 → 내 코스 만들기', () => {
     expect(fakeMaps.overlays.filter(o => o instanceof fakeMaps.CustomOverlay)).toHaveLength(3)
   })
 
+  it('지도 설명은 행사에서 오면 "행사 위치", 관광지(요즘 뜨는 명소)에서 오면 "출발 위치"', async () => {
+    fake.signIn()
+    const { unmount } = enter()
+    expect(await screen.findByText(/★ 행사 위치/)).toBeInTheDocument()
+    unmount()
+    renderApp({ route: '/course/nearby', state: { contentId: '5001', title: '감천문화마을', mapx: EVENT.mapx, mapy: EVENT.mapy, isEvent: false } })
+    expect(await screen.findByText(/★ 출발 위치/)).toBeInTheDocument()
+  })
+
   it('기준 행사 정보 없이 직접 진입하면 코스 탭으로 돌려보낸다', async () => {
     fake.signIn()
     renderApp({ route: '/course/nearby' })
