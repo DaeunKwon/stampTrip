@@ -17,3 +17,6 @@ ios/App/App/public
 # 릴리스 서명 키 (원스토어 업로드용) — 절대 커밋 금지, 별도 백업
 android/keystore/
 android/keystore.properties
+
+# 스토어 등록 자료 (스크린샷 · 배너 · 아이콘 초안 · 등록 가이드 md) — 로컬 보관, 다시 만들려면 npm run store:shots / store:banner
+store/

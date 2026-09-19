@@ -71,7 +71,7 @@ async function settle(page, ms = 2500) { await page.waitForLoadState('networkidl
 async function shot(page, name) { await page.screenshot({ path: `${OUT}/${name}.png` }); console.log('✔', name) }
 
 // 1 로그인
-{ const page = await newPage({ session: false }); await page.goto(`${BASE}/login`); await settle(page, 1500); await shot(page, '01-login'); await page.context().close() }
+{ const page = await newPage({ session: false }); await page.goto(`${BASE}/login`); await settle(page, 3500); await shot(page, '01-login'); await page.context().close() }
 const page = await newPage()
 // 2 홈
 await page.goto(`${BASE}/`); await settle(page, 4000); await shot(page, '02-home')
@@ -79,7 +79,7 @@ await page.goto(`${BASE}/`); await settle(page, 4000); await shot(page, '02-home
 await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await page.waitForTimeout(1500); await shot(page, '03-home-trending')
 // 4 행사 상세 모달
 await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(300)
-await page.locator('.grid.grid-cols-2 > *').first().click()
+await page.locator('.snap-x > *').first().click()
 await settle(page, 2500); await shot(page, '04-event-detail')
 // 5 코스 탭
 await page.goto(`${BASE}/course`); await settle(page, 4000); await shot(page, '05-course')
