@@ -33,12 +33,14 @@ export default function HomeCourses() {
       {!loaded ? (
         <div aria-hidden="true" className="h-[62px] rounded-2xl bg-gray-100 animate-pulse" />
       ) : courses.length === 0 ? (
-        <div className="bg-white rounded-2xl border-[1.5px] border-dashed border-gray-300 px-4 py-6 text-center">
-          <p className="text-sm font-semibold text-gray-600">아직 만든 코스가 없어요</p>
-          <p className="text-xs text-gray-400 mt-1">행사를 고르고 나만의 코스를 짜보세요</p>
+        <div className="flex items-center justify-between gap-2.5 bg-white rounded-2xl border-[1.5px] border-dashed border-gray-300 pl-4 pr-3 py-3">
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold text-gray-600">아직 만든 코스가 없어요</p>
+            <p className="text-[11px] text-gray-400 mt-0.5 truncate">행사를 고르고 코스를 짜보세요</p>
+          </div>
           <Link
             to="/course"
-            className="inline-flex items-center gap-1 mt-4 px-4 py-2 rounded-full bg-primary-500 text-white text-[12.5px] font-bold active:scale-95 transition-transform"
+            className="shrink-0 inline-flex items-center gap-1 px-3.5 py-2 rounded-full bg-primary-500 text-white text-xs font-bold whitespace-nowrap active:scale-95 transition-transform"
           >
             코스 짜러 가기
             <Chevron className="w-3.5 h-3.5" />
