@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useUserData } from '../store/UserDataProvider'
 import { useToast } from '../components/Toast'
 import DeleteAccountModal from '../components/DeleteAccountModal'
+import SubHeader from '../components/SubHeader'
 import { validateNickname, NICKNAME_MAX } from '../utils/nickname'
 import { ProviderBadge } from '../components/Provider'
 
@@ -60,15 +61,8 @@ export default function AccountSettings() {
   }
 
   return (
-    <div className="pt-4">
-      <button
-        onClick={() => navigate(-1)}
-        className="px-4 h-8 flex items-center gap-1.5 text-gray-500 text-sm"
-      >
-        <span className="text-base leading-none">‹</span>
-        <span className="text-xs font-semibold text-gray-600">내 정보</span>
-      </button>
-      <h1 className="px-4 mt-3 text-lg font-extrabold text-gray-900">계정 설정</h1>
+    <div className="pt-6">
+      <SubHeader title="계정 설정" fallback="/archive" />
 
       {/* 프로필 */}
       <section className="mx-4 mt-4 bg-white border border-gray-200 rounded-2xl overflow-hidden">

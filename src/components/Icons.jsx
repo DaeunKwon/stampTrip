@@ -30,3 +30,13 @@ export function FlagIcon({ className = 'w-4 h-4' }) {
     </svg>
   )
 }
+
+/** 왼쪽 화살표 — 한 단계 들어간 화면의 뒤로가기(SubHeader). */
+export function BackIcon({ className = 'w-[22px] h-[22px]' }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5" />
+      <path d="M11 6l-6 6 6 6" />
+    </svg>
+  )
+}
