@@ -88,7 +88,7 @@ export default function CourseDetail() {
           <div className="h-full bg-primary-500 rounded-full" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
         </div>
         {!complete && (
-          <p className="text-[10.5px] text-primary-600/80 mt-1.5">스팟을 누르면 지도 탭에서 위치를 확인하고, 가까이 가면 스탬프를 찍을 수 있어요</p>
+          <p className="text-[10.5px] text-primary-600/80 mt-1.5">스팟을 누르면 지도에서 위치를 확인하고, 가까이 가면 스탬프를 찍을 수 있어요</p>
         )}
       </div>
 
