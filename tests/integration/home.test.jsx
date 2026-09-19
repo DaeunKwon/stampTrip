@@ -165,7 +165,7 @@ describe('홈 내 코스', () => {
     expect(within(section()).getByRole('link', { name: '코스 짜러 가기' })).toHaveAttribute('href', '/course')
   })
 
-  it('3개까지는 전부 보여주고 모두 보기 버튼은 없다 · 방문 진행도를 표시한다', async () => {
+  it('3개까지는 전부 보여주고 모두 보기 버튼은 없다', async () => {
     fake.signIn()
     seedCourses(3)
     fake.seed('stamps', [{ user_id: TEST_USER_ID, content_id: '4001', title: '덕수궁', addr1: '서울', firstimage: '', stamped_at: '2026-09-11T05:00:00.000Z' }])
@@ -174,7 +174,6 @@ describe('홈 내 코스', () => {
     const links = within(section()).getAllByRole('link')
     expect(links).toHaveLength(3)
     expect(links[0]).toHaveAttribute('href', `/my/courses/${fake.rows('courses').find(c => c.name === '코스 3').id}`)   // 최근에 만든 순
-    expect(within(section()).getAllByText('1/2 방문')).toHaveLength(3)
     expect(within(section()).queryByRole('link', { name: /모두 보기/ })).not.toBeInTheDocument()
   })
 
@@ -185,5 +184,69 @@ describe('홈 내 코스', () => {
     await screen.findByText('코스 4')
     expect(within(section()).queryByText('코스 1')).not.toBeInTheDocument()
     expect(within(section()).getByRole('link', { name: '코스 4개 모두 보기' })).toHaveAttribute('href', '/my/courses')
+  })
+
+  it('여권 카드와 행사/축제 영역 사이에 놓인다', async () => {
+    fake.signIn()
+    renderApp({ route: '/' })
+    await screen.findByText('아직 만든 코스가 없어요')
+    const passport = screen.getByRole('link', { name: /스탬프 찍으러 가기/ })
+    const events = screen.getByText('진행중인 행사/축제')
+    expect(passport.compareDocumentPosition(section()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(section().compareDocumentPosition(events) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('조회가 끝나기 전에는 빈 안내를 보여주지 않는다 (코스가 있는 사용자에게 잠깐 비치지 않도록)', async () => {
+    fake.signIn()
+    seedCourses(1)
+    const release = fake.hold('courses')
+    renderApp({ route: '/' })
+    await screen.findByRole('link', { name: /스탬프 찍으러 가기/ })
+    expect(within(section()).queryByText('아직 만든 코스가 없어요')).not.toBeInTheDocument()
+    expect(within(section()).queryByRole('link')).not.toBeInTheDocument()
+    release()
+    expect(await within(section()).findByText('코스 1')).toBeInTheDocument()
+    expect(within(section()).queryByText('아직 만든 코스가 없어요')).not.toBeInTheDocument()
+  })
+
+  it('코스 개수와 ★행사 → 스팟 순서를 보여주고, 방문 현황·완주 문구는 표시하지 않는다', async () => {
+    fake.signIn()
+    seedCourses(1)
+    fake.seed('stamps', SPOTS.map(s => ({ user_id: TEST_USER_ID, content_id: s.contentid, title: s.title, addr1: '서울', firstimage: '', stamped_at: '2026-09-11T05:00:00.000Z' })))
+    renderApp({ route: '/' })
+    await screen.findByText('코스 1')
+    expect(screen.getByRole('heading', { level: 2, name: /내 코스/ }).textContent).toBe('내 코스1')
+    expect(within(section()).getByText(/서울 빛초롱 축제 → 청계광장 → 덕수궁/)).toBeInTheDocument()
+    expect(within(section()).queryByText('완주')).not.toBeInTheDocument()
+    expect(within(section()).queryByText(/방문$/)).not.toBeInTheDocument()
+  })
+
+  it('코스 줄을 누르면 그 코스 상세 화면으로 간다', async () => {
+    const user = userEvent.setup()
+    fake.signIn()
+    seedCourses(2)
+    renderApp({ route: '/' })
+    await user.click(await screen.findByRole('link', { name: /코스 2/ }))
+    expect(await screen.findByRole('heading', { name: '코스 2' })).toBeInTheDocument()
+    expect(screen.queryByText('진행중인 행사/축제')).not.toBeInTheDocument()
+  })
+
+  it('모두 보기를 누르면 My 탭 › 내 코스 목록(전체)으로 간다', async () => {
+    const user = userEvent.setup()
+    fake.signIn()
+    seedCourses(5)
+    renderApp({ route: '/' })
+    await user.click(await screen.findByRole('link', { name: '코스 5개 모두 보기' }))
+    expect(await screen.findByText('코스 1')).toBeInTheDocument()   // 홈에서는 접혀 있던 코스
+    expect(screen.getByText('5개')).toBeInTheDocument()
+  })
+
+  it('빈 상태의 코스 짜러 가기를 누르면 코스 탭(두 번째 탭)으로 간다', async () => {
+    const user = userEvent.setup()
+    fake.signIn()
+    renderApp({ route: '/' })
+    await user.click(await screen.findByRole('link', { name: '코스 짜러 가기' }))
+    await waitFor(() => expect(screen.queryByText('아직 만든 코스가 없어요')).not.toBeInTheDocument())
+    expect(screen.getByRole('link', { name: '코스' })).toHaveAttribute('aria-current', 'page')
   })
 })

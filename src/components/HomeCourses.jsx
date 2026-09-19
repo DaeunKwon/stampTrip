@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import useCourse from '../hooks/useCourse'
 import useStamp from '../hooks/useStamp'
-import { visitedCount } from '../pages/MyCourses'
 
 // 3개까지는 전부, 4개부터는 최근 3개 + "모두 보기"
 const HOME_MAX = 3
@@ -20,7 +19,7 @@ function Chevron({ className }) {
  */
 export default function HomeCourses() {
   const { courses } = useCourse()
-  const { loaded, isStamped } = useStamp()
+  const { loaded } = useStamp()
   const many = courses.length > HOME_MAX
   const shown = many ? courses.slice(0, HOME_MAX) : courses
 
@@ -49,29 +48,22 @@ export default function HomeCourses() {
       ) : (
         <>
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
-            {shown.map(course => {
-              const done = visitedCount(course, isStamped)
-              const total = course.spots.length
-              return (
-                <Link
-                  key={course.id}
-                  to={`/my/courses/${course.id}`}
-                  className="flex items-center gap-2.5 px-4 py-3 active:bg-gray-50"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{course.name}</p>
-                    <p className="text-[11.5px] text-gray-500 mt-0.5 truncate">
-                      <span className="text-primary-600">★</span> {course.event.title}
-                      {course.spots.map(s => ` → ${s.title}`).join('')}
-                    </p>
-                  </div>
-                  <span className="text-[11px] font-bold text-primary-600 tabular-nums flex-shrink-0">
-                    {total > 0 && done === total ? '완주' : `${done}/${total} 방문`}
-                  </span>
-                  <Chevron className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
-                </Link>
-              )
-            })}
+            {shown.map(course => (
+              <Link
+                key={course.id}
+                to={`/my/courses/${course.id}`}
+                className="flex items-center gap-2.5 px-4 py-3 active:bg-gray-50"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">{course.name}</p>
+                  <p className="text-[11.5px] text-gray-500 mt-0.5 truncate">
+                    <span className="text-primary-600">★</span> {course.event.title}
+                    {course.spots.map(s => ` → ${s.title}`).join('')}
+                  </p>
+                </div>
+                <Chevron className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+              </Link>
+            ))}
           </div>
           {many && (
             <Link
