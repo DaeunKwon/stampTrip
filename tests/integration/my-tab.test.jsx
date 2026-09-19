@@ -39,7 +39,7 @@ describe('My 탭 허브', () => {
     const stat = label => screen.getAllByRole('link').find(l => l.getAttribute('href') === `/my/${label}` && l.querySelector('p'))
     expect(stat('courses').textContent).toContain('1')
     expect(stat('favorites').textContent).toContain('2')
-    expect(screen.getByText(/v0\.1\.0/)).toBeInTheDocument()
+    expect(screen.getByText(/v1\.0\.1/)).toBeInTheDocument()
   })
 
   it('기록 조회가 실패하면 토스트로 알린다', async () => {

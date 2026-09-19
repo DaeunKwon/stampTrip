@@ -1,14 +1,23 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { App as CapacitorApp } from '@capacitor/app'
 import useStamp from '../hooks/useStamp'
 import useFavorite from '../hooks/useFavorite'
 import useCourse from '../hooks/useCourse'
 import ProfileCard from '../components/ProfileCard'
+import { isNativeApp } from '../native/platform'
 
 /** My 탭: 프로필 + 메뉴 허브. 각 메뉴는 한 단계 들어간 상세 화면으로 이동한다. */
 export default function Archive() {
   const { stamps } = useStamp()
   const { favorites } = useFavorite()
   const { courses } = useCourse()
+  // 스토어 앱 버전. 앱에서는 설치된 앱의 실제 버전을 읽는다 (OTA 로 웹 번들만 바뀌어도 설치 버전은 그대로이므로)
+  const [version, setVersion] = useState(__APP_VERSION__)
+  useEffect(() => {
+    if (!isNativeApp) return
+    CapacitorApp.getInfo().then(info => info?.version && setVersion(info.version)).catch(() => {})
+  }, [])
 
   return (
     <div className="pt-6 pb-6">
@@ -27,7 +36,7 @@ export default function Archive() {
       </MenuGroup>
 
       <div className="mt-7 text-center text-[10.5px] text-gray-400 leading-relaxed">
-        <span className="font-semibold text-gray-500">스탬프여행</span> v{__APP_VERSION__}
+        <span className="font-semibold text-gray-500">스탬프여행</span> v{version}
         <br />관광 정보 · 한국관광공사 TourAPI
         <br />지도 · 카카오맵
       </div>

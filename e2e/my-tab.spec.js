@@ -12,7 +12,7 @@ test.describe('My 탭 · 계정', () => {
     await expect(page.getByRole('heading', { name: '내 정보' })).toBeVisible()
     await expect(page.getByText('테스터')).toBeVisible()
     await expect(page.getByText('2026년 8월부터 함께')).toBeVisible()
-    await expect(page.getByText(/v0\.1\.0/)).toBeVisible()
+    await expect(page.getByText(/v1\.0\.1/)).toBeVisible()
     await expectNoHorizontalScroll(page, expect)
     await shot(page, testInfo, '12-my-tab')
 

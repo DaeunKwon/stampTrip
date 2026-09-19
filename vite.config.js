@@ -5,6 +5,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { computeBundleVersion } from './scripts/ota-version.mjs'
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'))
+// 스토어에 올리는 앱 버전(android versionName)을 화면 표시에도 쓴다 — 버전은 build.gradle 한 곳에서만 올린다
+function storeVersion() {
+  try {
+    const gradle = readFileSync(new URL('./android/app/build.gradle', import.meta.url), 'utf8')
+    return /versionName\s+"([^"]+)"/.exec(gradle)?.[1] ?? pkg.version
+  } catch {
+    return pkg.version
+  }
+}
 const bundleVersion = computeBundleVersion()
 
 // OTA: 번들에 박힌 버전(__BUNDLE_VERSION__)과 같은 값을 dist/bundle-version.json 으로도 남긴다 (scripts/ota-bundle.mjs 가 읽음)
@@ -16,9 +25,9 @@ const emitBundleVersion = {
 }
 
 export default defineConfig(({ mode }) => ({
-  // My 탭 하단 앱 정보에 표시 (package.json version)
+  // My 탭 하단 앱 정보에 표시 (스토어 앱 버전. 네이티브 앱에서는 실행 중 설치된 앱의 실제 버전으로 바꿔 보여준다)
   // __BUNDLE_VERSION__: 앱(OTA)이 서버의 최신 번들과 비교하는 웹 번들 버전
-  define: { __APP_VERSION__: JSON.stringify(pkg.version), __BUNDLE_VERSION__: JSON.stringify(bundleVersion) },
+  define: { __APP_VERSION__: JSON.stringify(storeVersion()), __BUNDLE_VERSION__: JSON.stringify(bundleVersion) },
   plugins: [
     react(),
     emitBundleVersion,
